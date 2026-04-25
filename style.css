@@ -312,6 +312,37 @@ header.hero::before {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
     color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.copy-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    order: -1; /* Move to the far left */
+}
+
+.copy-btn:hover {
+    background: #4f46e5;
+    transform: scale(1.05);
+}
+
+.copy-btn.copied {
+    background: var(--secondary);
+}
+
+.terminal-title {
+    margin-left: 0.5rem;
+    flex-grow: 1;
+    text-align: left;
 }
 
 .terminal-body {

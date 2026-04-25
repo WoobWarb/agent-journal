@@ -87,10 +87,13 @@
             <div class="glass-card setup-card">
                 <h2>Ready to start journaling?</h2>
                 <p>Simply tell your agent to use the Agent Journal skill.</p>
-                <div class="terminal">
-                    <div class="terminal-header">PowerShell (One-Liner Setup)</div>
+                <div class="terminal" id="terminal-card">
+                    <div class="terminal-header">
+                        <span class="terminal-title">PowerShell (One-Liner Setup)</span>
+                        <button class="copy-btn" onclick="copyCommand()">Copy</button>
+                    </div>
                     <div class="terminal-body">
-                        <span class="prompt">></span> iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 | iex
+                        <span class="prompt">></span> <code id="install-cmd">iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 | iex</code>
                     </div>
                 </div>
                 <p class="hint">This command creates a <code>.agents/</code> folder and installs the template instantly.</p>
@@ -106,5 +109,19 @@
             <p>&copy; 2026 Agent Journal Project. Open source under MIT License.</p>
         </div>
     </footer>
+    <script>
+        function copyCommand() {
+            const cmd = document.getElementById('install-cmd').innerText;
+            navigator.clipboard.writeText(cmd).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.innerText = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerText = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
