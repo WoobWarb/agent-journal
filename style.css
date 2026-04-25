@@ -327,7 +327,6 @@ header.hero::before {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    order: -1; /* Move to the far left */
 }
 
 .copy-btn:hover {
@@ -340,7 +339,6 @@ header.hero::before {
 }
 
 .terminal-title {
-    margin-left: 0.5rem;
     flex-grow: 1;
     text-align: left;
 }
