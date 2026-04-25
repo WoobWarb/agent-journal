@@ -15,10 +15,15 @@ Most AI agents focus on technical context saving (long-term memory). **Agent Jou
 - 🤝 **Human-First**: Structured timelines that make sense to developers, not just machines.
 - ⚡ **Zero Setup**: No database, no API keys. Just one file.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (One-Liner Setup)
 
-### 1. Installation
-Copy `Agent-Journal.md` to your global AI skills folder or your project's `.agents/` directory.
+Open your terminal in your project root and run:
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 | iex
+```
+
+This will automatically create a `.agents/` folder and download the `Agent-Journal.md` template for you.
 
 ### 2. Usage
 Tell your AI Agent:
