@@ -2,28 +2,110 @@
 
 **"The human-readable diary of your AI agent's work."**
 
-## 📌 สรุปหลักการจดบันทึก
-เพื่อให้คุณย้อนกลับมาอ่านใน Note ทั่วไปได้ง่าย เอเย่นต์จะจดบันทึกโดยใช้โครงสร้างดังนี้:
-
----
-## [YYYY-MM-DD] | หัวข้อสั้นๆ ของงาน
-**สถานะ:** [สำเร็จ / กำลังทำ / มีปัญหา]
-**ประเภท:** [ฟีเจอร์ใหม่ / แก้บัก / ปรับดีไซน์]
-
-### 📝 สิ่งที่ทำไป (Actions)
-- [x] รายละเอียดงานที่ 1 (ระบุชื่อไฟล์ที่แก้)
-- [x] รายละเอียดงานที่ 2
-- [ ] สิ่งที่ต้องทำต่อ...
-
-### 📂 ไฟล์ที่เกี่ยวข้อง (Files)
-- path/to/file1.js
-- path/to/file2.css
-
-### 💡 บันทึกเพิ่มเติม (Notes)
-- ใส่เหตุผลสั้นๆ ว่าทำไมถึงแก้แบบนี้ หรือจุดที่ต้องระวัง
 ---
 
-## 🚀 วิธีนำไปใช้
-1. เก็บไฟล์นี้ไว้ในเครื่อง (เป็น Manual ให้เอเย่นต์)
-2. เมื่อเริ่มโปรเจกต์ใหม่ บอกเอเย่นต์ว่า "ใช้ฟอร์แมต Agent-Journal จดลงใน .agents/Agent-Journal.md"
-3. ไฟล์นี้จะเป็นไฟล์ Text ธรรมดาที่เปิดอ่านได้จากทุกที่ (มือถือ, เว็บ, Notepad)
+## 📌 How to Use
+
+Tell your AI agent:
+> *"Use the Agent Journal format to document our work in `.agents/Agent-Journal.md`"*
+
+The agent will maintain a clean, chronological log of every session — structured so **humans** can actually read and understand what happened.
+
+---
+
+## 📐 Journal Format
+
+Every journal file starts with a **Project Header**, followed by individual **Session Entries**.
+
+### Project Header (Top of File)
+
+```markdown
+# 📓 Agent Journal — [Project Name]
+> **Created:** YYYY-MM-DD | **Last Updated:** YYYY-MM-DD | **Sessions:** N
+```
+
+---
+
+### Session Entry (One Per Work Session)
+
+Use the **Full Format** for significant work, or the **Mini Format** for quick fixes.
+
+---
+
+#### ✅ Full Format
+
+```markdown
+---
+## [YYYY-MM-DD] | Short Title of Work Done
+**Status:** ✅ Complete | ⚠️ Partial | ❌ Failed | 🔄 In Progress
+**Type:** 🚀 Feature | 🐛 Bug Fix | 🎨 UI/UX | 🔧 Refactor | 📦 Setup | 📄 Docs
+**Impact:** 🔴 High | 🟡 Medium | 🟢 Low
+
+### TL;DR
+> One or two sentences summarizing what was accomplished and why.
+
+### 📝 Actions
+- [x] Completed task description (`path/to/file`)
+- [x] Another completed task
+- [ ] ⏳ Pending task for next session
+
+### 🤔 Decisions
+- Chose X over Y because [reason]
+- Used [library/approach] because [trade-off explanation]
+
+### ⚠️ Risks & Blockers
+- [Blocker] Description of what's blocking progress
+- [Risk] Something that could cause issues later
+
+### 📂 Files Changed
+- `path/to/file1.js` — Brief description of change
+- `path/to/file2.css` — Brief description of change
+
+### 💡 Notes
+- Additional context, gotchas, or reminders for next session
+```
+
+---
+
+#### ⚡ Mini Format (for quick fixes)
+
+```markdown
+---
+## [YYYY-MM-DD] | Quick Fix Title
+**Status:** ✅ Complete | **Type:** 🐛 Bug Fix | **Impact:** 🟢 Low
+
+- [x] Fixed [issue] in `path/to/file`
+- 💡 [Optional note]
+```
+
+---
+
+## 🎯 Status Reference
+
+| Emoji | Status | When to Use |
+|-------|--------|-------------|
+| ✅ | Complete | All goals achieved |
+| ⚠️ | Partial | Some tasks done, others remaining |
+| ❌ | Failed | Blocked or reverted |
+| 🔄 | In Progress | Work started but not finished |
+
+## 📦 Type Reference
+
+| Emoji | Type | Description |
+|-------|------|-------------|
+| 🚀 | Feature | New functionality |
+| 🐛 | Bug Fix | Error correction |
+| 🎨 | UI/UX | Visual / experience changes |
+| 🔧 | Refactor | Code restructuring |
+| 📦 | Setup | Project configuration |
+| 📄 | Docs | Documentation updates |
+
+---
+
+## 💡 Tips for Best Results
+
+1. **Be specific** — Include file paths in action items
+2. **Explain "Why"** — The Decisions section is the most valuable part
+3. **Flag risks early** — Blockers section prevents forgotten issues
+4. **Use Mini Format** — Don't over-document trivial fixes
+5. **Keep TL;DR short** — If someone reads only one line, make it count

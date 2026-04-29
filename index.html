@@ -4,37 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Journal | Human-Readable AI Development Diary</title>
+    <meta name="description" content="Stop losing track of what your AI agent did. Agent Journal creates beautiful, portable development histories in Markdown that you can read anywhere.">
+    <meta property="og:title" content="Agent Journal — The Human-Readable AI Diary">
+    <meta property="og:description" content="A lightweight skill for AI coding assistants that documents every change in clean, portable Markdown.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="hero.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📓</text></svg>">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav>
+    <!-- Ambient background -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Nav -->
+    <nav id="navbar">
         <div class="container">
             <div class="logo">📓 Agent Journal</div>
-            <div class="nav-links">
+            <div class="nav-links" id="navLinks">
+                <a href="#how-it-works">How It Works</a>
                 <a href="#features">Features</a>
-                <a href="#setup">Setup</a>
-                <a href="https://github.com/WoobWarb" target="_blank" class="github-btn">GitHub</a>
+                <a href="#comparison">Before & After</a>
+                <a href="#setup">Install</a>
+                <a href="https://github.com/WoobWarb/agent-journal" target="_blank" class="github-btn">⭐ GitHub</a>
+            </div>
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
             </div>
         </div>
     </nav>
 
+    <!-- Hero -->
     <header class="hero">
         <div class="container grid">
             <div class="hero-content">
-                <span class="badge">Open Source • Lightweight</span>
+                <span class="badge"><span class="pulse"></span> Open Source • Zero Config</span>
                 <h1>The human-readable diary for your AI agent.</h1>
-                <p>Stop losing track of what your AI agent actually did. Agent Journal creates beautiful, portable development histories that you can read anywhere.</p>
+                <p>Stop losing track of what your AI agent actually did. Get beautiful, portable development logs in plain Markdown — readable on any device.</p>
                 <div class="hero-btns">
-                    <a href="#setup" class="btn primary">Get Started</a>
-                    <a href="Agent-Journal.md" download class="btn secondary">Download Template</a>
+                    <a href="#setup" class="btn primary">Get Started →</a>
+                    <a href="Agent-Journal.md" download class="btn secondary">↓ Download Template</a>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="hero.png" alt="Agent Journal Preview">
-                <div class="glass-card preview-card">
+                <img src="hero.png" alt="Agent Journal Preview" loading="eager">
+                <div class="glass-card preview-card" id="typing-card">
                     <div class="card-header">
                         <span class="dot red"></span>
                         <span class="dot yellow"></span>
@@ -42,61 +61,167 @@
                         <span class="filename">.agents/Agent-Journal.md</span>
                     </div>
                     <div class="card-body">
-                        <pre><code><span class="md-h2">## [2026-04-25] | Refined UI</span>
-<span class="md-meta">**Status:** ✅ Success</span>
-<span class="md-meta">**Type:** UI Improvement</span>
-
-<span class="md-h3">### 📝 Actions</span>
-- [x] Added glassmorphism
-- [x] Updated primary colors
-- [ ] Add mobile responsiveness</code></pre>
+                        <pre><code id="typed-code"></code></pre>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <section id="features" class="features">
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
         <div class="container">
-            <div class="section-title">
-                <h2>Why use Agent Journal?</h2>
-                <p>Designed for humans, loved by agents.</p>
+            <div class="section-title reveal">
+                <h2>Up and running in 60 seconds</h2>
+                <p>No databases, no API keys. Just one Markdown file.</p>
             </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="icon">📱</div>
-                    <h3>Truly Portable</h3>
-                    <p>It's just a Markdown file. Read it in VS Code, Obsidian, Notion, or your phone's default notes app.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">🧠</div>
-                    <h3>Context Awareness</h3>
-                    <p>Helps your AI agent remember the "Why" behind decisions, not just the "How" of the code.</p>
-                </div>
-                <div class="feature-card">
+            <div class="steps-grid">
+                <div class="step-card reveal">
+                    <div class="step-number">1</div>
                     <div class="icon">⚡</div>
-                    <h3>Zero Setup</h3>
-                    <p>No databases, no API keys, no configuration hell. Just one file in your project or global skills.</p>
+                    <h3>Install the Template</h3>
+                    <p>Run one command in your terminal to add the journal template to your project.</p>
+                </div>
+                <div class="step-card reveal">
+                    <div class="step-number">2</div>
+                    <div class="icon">💬</div>
+                    <h3>Tell Your Agent</h3>
+                    <p>"Use the Agent Journal format to document our work." That's it.</p>
+                </div>
+                <div class="step-card reveal">
+                    <div class="step-number">3</div>
+                    <div class="icon">📖</div>
+                    <h3>Read Anywhere</h3>
+                    <p>Open the Markdown file on your phone, Obsidian, VS Code, or any text editor.</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Features -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Designed for humans, loved by agents</h2>
+                <p>Everything your AI agent logs should be something you'd actually want to read.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card reveal">
+                    <div class="icon">📱</div>
+                    <h3>Truly Portable</h3>
+                    <p>Just a Markdown file. Read it in VS Code, Obsidian, Notion, GitHub, or your phone's notes app.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon">🧠</div>
+                    <h3>Decision Memory</h3>
+                    <p>Captures the "Why" behind every decision — not just the "How" of the code. Never lose context again.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon">⚡</div>
+                    <h3>Zero Configuration</h3>
+                    <p>No databases, no API keys, no config files. One template, one command, done.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon">🎯</div>
+                    <h3>Impact Tracking</h3>
+                    <p>Every entry includes impact level, status badges, and risk flags — so you know what matters most.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon">📋</div>
+                    <h3>TL;DR Summaries</h3>
+                    <p>Each session starts with a one-line summary. Skim 50 sessions in under a minute.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="icon">🔄</div>
+                    <h3>Flexible Format</h3>
+                    <p>Full format for big features, mini format for quick fixes. The agent picks the right one automatically.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Before / After -->
+    <section id="comparison" class="comparison">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Before & After</h2>
+                <p>See the difference Agent Journal makes to your workflow.</p>
+            </div>
+            <div class="comparison-grid reveal">
+                <div class="compare-card before">
+                    <span class="compare-label">❌ Without Agent Journal</span>
+                    <pre><code>// What did the AI change last Tuesday?
+// I think it was in Login.jsx...
+// Or maybe Dashboard? 
+// Let me check git log...
+// 47 commits, no useful messages
+// "fix stuff", "update", "wip"
+// 😩 I have no idea what happened</code></pre>
+                </div>
+                <div class="compare-card after">
+                    <span class="compare-label">✅ With Agent Journal</span>
+                    <pre><code><span class="md-h2">## [2026-04-25] | Redesigned Login</span>
+<span class="md-meta">Status: ✅ Complete | Impact: 🔴 High</span>
+
+<span class="md-h3">### TL;DR</span>
+<span class="md-meta">> Rebuilt login with OAuth2 + glassmorphism</span>
+
+<span class="md-h3">### 🤔 Decisions</span>
+<span class="md-check">- Chose OAuth over email/pass for UX</span>
+<span class="md-check">- Used glassmorphism to match design system</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compatible With -->
+    <section class="compatible">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Works with your favorite AI agent</h2>
+                <p>Agent Journal is agent-agnostic. If it can write Markdown, it works.</p>
+            </div>
+            <div class="compat-grid reveal">
+                <div class="compat-item">
+                    <span class="compat-icon">🚀</span>
+                    <span>Antigravity</span>
+                </div>
+                <div class="compat-item">
+                    <span class="compat-icon">🔮</span>
+                    <span>Cursor</span>
+                </div>
+                <div class="compat-item">
+                    <span class="compat-icon">🏄</span>
+                    <span>Windsurf</span>
+                </div>
+                <div class="compat-item">
+                    <span class="compat-icon">🤖</span>
+                    <span>GitHub Copilot</span>
+                </div>
+                <div class="compat-item">
+                    <span class="compat-icon">✨</span>
+                    <span>Any LLM Agent</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Setup CTA -->
     <section id="setup" class="setup">
         <div class="container">
-            <div class="glass-card setup-card">
-                <h2>Ready to start journaling?</h2>
-                <p>Simply tell your agent to use the Agent Journal skill.</p>
+            <div class="glass-card setup-card reveal">
+                <h2>Ready to start journaling? 🚀</h2>
+                <p>One command. Zero config. Full transparency.</p>
                 <div class="terminal" id="terminal-card">
                     <div class="terminal-header">
                         <span class="terminal-title">PowerShell (One-Liner Setup)</span>
-                        <button class="copy-btn" onclick="copyCommand()">Copy</button>
+                        <button class="copy-btn" id="copyBtn" onclick="copyCommand()">Copy</button>
                     </div>
                     <div class="terminal-body">
                         <span class="prompt">></span> <code id="install-cmd">iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 | iex</code>
                     </div>
                 </div>
-                <p class="hint">This command creates a <code>.agents/</code> folder and installs the template instantly.</p>
+                <p class="hint">This creates a <code>.agents/</code> folder and downloads the template to your project.</p>
                 <div class="footer-links">
                     <p>Created with ❤️ by <a href="https://github.com/WoobWarb">WoobWarb</a></p>
                 </div>
@@ -109,19 +234,111 @@
             <p>&copy; 2026 Agent Journal Project. Open source under MIT License.</p>
         </div>
     </footer>
+
     <script>
-        function copyCommand() {
-            const cmd = document.getElementById('install-cmd').innerText;
-            navigator.clipboard.writeText(cmd).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                btn.innerText = 'Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.innerText = 'Copy';
-                    btn.classList.remove('copied');
-                }, 2000);
+    // === Particles ===
+    (function() {
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const COUNT = 50;
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        for (let i = 0; i < COUNT; i++) {
+            particles.push({
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+                r: Math.random() * 1.5 + 0.5, a: Math.random() * 0.5 + 0.1
             });
         }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(129, 140, 248, ${p.a})`; ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+
+    // === Typing Effect ===
+    (function() {
+        const lines = [
+            { text: '## [2026-04-29] | Upgraded Agent Journal', cls: 'md-h2' },
+            { text: '**Status:** ✅ Complete', cls: 'md-meta' },
+            { text: '**Type:** 🚀 Feature | **Impact:** 🔴 High', cls: 'md-meta' },
+            { text: '', cls: '' },
+            { text: '### TL;DR', cls: 'md-h3' },
+            { text: '> Rebuilt the entire landing page & skill format', cls: 'md-meta' },
+            { text: '', cls: '' },
+            { text: '### 📝 Actions', cls: 'md-h3' },
+            { text: '- [x] Added animated particles', cls: 'md-check' },
+            { text: '- [x] Built typing effect demo', cls: 'md-check' },
+            { text: '- [ ] ⏳ Add dark/light toggle', cls: 'md-pending' },
+        ];
+
+        const el = document.getElementById('typed-code');
+        let lineIdx = 0, charIdx = 0, html = '';
+
+        function type() {
+            if (lineIdx >= lines.length) {
+                setTimeout(() => { el.innerHTML = ''; html = ''; lineIdx = 0; charIdx = 0; type(); }, 3000);
+                return;
+            }
+            const line = lines[lineIdx];
+            if (charIdx === 0 && line.cls) html += `<span class="${line.cls}">`;
+            if (charIdx < line.text.length) {
+                html += line.text[charIdx]; charIdx++;
+                el.innerHTML = html + '<span class="typing-line"> </span>';
+                setTimeout(type, 25 + Math.random() * 20);
+            } else {
+                if (line.cls) html += '</span>';
+                html += '\n'; lineIdx++; charIdx = 0;
+                setTimeout(type, 80);
+            }
+        }
+        setTimeout(type, 1500);
+    })();
+
+    // === Scroll Reveal ===
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // === Nav scroll ===
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // === Hamburger ===
+    function toggleMenu() {
+        document.getElementById('hamburger').classList.toggle('active');
+        document.getElementById('navLinks').classList.toggle('open');
+    }
+    document.querySelectorAll('.nav-links a').forEach(a => {
+        a.addEventListener('click', () => {
+            document.getElementById('hamburger').classList.remove('active');
+            document.getElementById('navLinks').classList.remove('open');
+        });
+    });
+
+    // === Copy ===
+    function copyCommand() {
+        const cmd = document.getElementById('install-cmd').innerText;
+        navigator.clipboard.writeText(cmd).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.innerText = 'Copied!'; btn.classList.add('copied');
+            setTimeout(() => { btn.innerText = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        });
+    }
     </script>
 </body>
 </html>
