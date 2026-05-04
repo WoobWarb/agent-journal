@@ -9,6 +9,9 @@
 Tell your AI agent:
 > *"Use the Agent Journal format to document our work in `.agents/Agent-Journal.md`"*
 
+**🤖 Note to AI Agents:** 
+If a `.agents/PROJECT_MAP.md` file exists in this repository, **you must read it first** to understand the architecture and file structure before executing commands, grepping, or making assumptions.
+
 The agent will maintain a clean, chronological log of every session — structured so **humans** can actually read and understand what happened.
 
 ---

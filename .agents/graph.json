@@ -1,0 +1,37 @@
+[
+  {
+    "path": "Agent-Journal.md",
+    "ext": ".md",
+    "context": "# Agent Journal Skill ---"
+  },
+  {
+    "path": "README.md",
+    "ext": ".md",
+    "context": "# \ud83d\udcd3 Agent Journal [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welco..."
+  },
+  {
+    "path": "agent-map.py",
+    "ext": ".py",
+    "context": "# Directories to ignore to keep the map clean and focused"
+  },
+  {
+    "path": "index.html",
+    "ext": ".html",
+    "context": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+  },
+  {
+    "path": "install.ps1",
+    "ext": ".ps1",
+    "context": "# Agent Journal Remote Installer # \ud83d\udcd3 \"The human-readable diary of your AI agent's work.\" param( [switch]$Global,"
+  },
+  {
+    "path": "install.sh",
+    "ext": ".sh",
+    "context": "#!/bin/bash # Agent Journal Remote Installer # \ud83d\udcd3 \"The human-readable diary of your AI agent's work.\" set -e"
+  },
+  {
+    "path": "style.css",
+    "ext": ".css",
+    "context": ":root { --bg: #06060a; --bg-alt: #0c0c14; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08);"
+  }
+]

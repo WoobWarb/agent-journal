@@ -19,6 +19,7 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 | Feature | Description |
 |---------|-------------|
 | 🧠 **Decision Memory** | Captures *why* decisions were made, not just *what* changed |
+| 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map so AI doesn't get lost |
 | 📱 **Truly Portable** | Plain Markdown — read on your phone, Obsidian, VS Code, anywhere |
 | 🎯 **Impact Tracking** | Status badges, impact levels, and risk flags for every session |
 | 📋 **TL;DR Summaries** | Skim 50 sessions in under a minute |
@@ -51,6 +52,24 @@ Then tell your AI agent:
 |------|-----------|------|-------------|
 | Global install | `-Global` | `--global` | Install to `~/.agents/` instead of project |
 | Force overwrite | `-Force` | `--force` | Overwrite existing file without asking |
+
+---
+
+## 🗺️ Agent Map (Memory Layer)
+
+**Don't let your AI get lost.** In large codebases, AI assistants waste tokens and time reading hundreds of files or randomly `grep`ing for context.
+
+The **Agent Map** is a "knowledge graph" that gives your AI an instant understanding of your project architecture.
+
+### How to use it:
+
+1. Drop `agent-map.py` into your project root.
+2. Run it to generate the memory layer:
+   ```bash
+   python agent-map.py
+   ```
+3. It creates `.agents/PROJECT_MAP.md` and `graph.json`.
+4. Your AI is instructed by the Agent Journal to **always read the map first**. This reduces hallucinations and drops token usage significantly.
 
 ---
 
