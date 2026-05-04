@@ -71,6 +71,26 @@ fi
 
 echo "  [+] Successfully installed Agent-Journal.md"
 
+# Download and run Agent Map (only for local installs)
+if [ "$GLOBAL" = false ]; then
+    echo "  [*] Downloading Agent Map generator..."
+    MAP_SCRIPT_PATH="$(pwd)/agent-map.py"
+    if command -v curl &> /dev/null; then
+        curl -fsSL "$REPO_URL/agent-map.py" -o "$MAP_SCRIPT_PATH"
+    else
+        wget -q "$REPO_URL/agent-map.py" -O "$MAP_SCRIPT_PATH"
+    fi
+    echo "  [+] Successfully downloaded agent-map.py"
+    echo "  [*] Generating Project Map..."
+    if command -v python3 &> /dev/null; then
+        python3 "$MAP_SCRIPT_PATH"
+    elif command -v python &> /dev/null; then
+        python "$MAP_SCRIPT_PATH"
+    else
+        echo "  [!] Could not run Python automatically."
+    fi
+fi
+
 # Add to .gitignore
 if [ -f ".gitignore" ]; then
     if ! grep -q ".agents/" .gitignore; then

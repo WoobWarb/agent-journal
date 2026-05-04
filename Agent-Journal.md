@@ -6,6 +6,9 @@
 
 ## 📌 How to Use
 
+Put this to other project's root directory and run it:
+iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/agent-map.py -OutFile agent-map.py; python agent-map.py
+
 Tell your AI agent:
 > *"Use the Agent Journal format to document our work in `.agents/Agent-Journal.md`"*
 

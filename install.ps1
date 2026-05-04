@@ -60,6 +60,20 @@ try {
     return
 }
 
+# 5. Download and run Agent Map (only for local installs)
+if (-not $Global) {
+    Write-Host "  [*] Downloading Agent Map generator..." -ForegroundColor Gray
+    $MapScriptPath = Join-Path (Get-Location) "agent-map.py"
+    try {
+        Invoke-WebRequest -Uri "$RepoUrl/agent-map.py" -OutFile $MapScriptPath -UseBasicParsing
+        Write-Host "  [+] Successfully downloaded agent-map.py" -ForegroundColor Green
+        Write-Host "  [*] Generating Project Map..." -ForegroundColor Gray
+        python $MapScriptPath
+    } catch {
+        Write-Host "  [!] Failed to download or run agent-map.py." -ForegroundColor Yellow
+    }
+}
+
 # 5. Add to .gitignore if not already there
 $gitignorePath = Join-Path (Get-Location) ".gitignore"
 if (Test-Path $gitignorePath) {
