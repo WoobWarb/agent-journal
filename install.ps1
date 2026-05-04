@@ -84,12 +84,27 @@ if (Test-Path $gitignorePath) {
     }
 }
 
-# 6. Success Message
+# 7. Configure AI Auto-Journaling
+if (-not $Global) {
+    Write-Host "  [*] Configuring AI Auto-Journaling..." -ForegroundColor Gray
+    $RuleText = "`n# Documentation Rule`nAlways document our work at the end of the session using the Agent Journal format found in `.agents/Agent-Journal.md`. Do not ask for permission, just do it automatically.`n"
+    
+    $RulesFiles = @(".cursorrules", ".windsurfrules")
+    foreach ($file in $RulesFiles) {
+        $RulePath = Join-Path (Get-Location) $file
+        if ((Test-Path $RulePath) -and ((Get-Content $RulePath -Raw) -match "Agent Journal")) {
+            continue
+        }
+        Add-Content $RulePath $RuleText
+        Write-Host "  [+] Configured auto-journaling for $file" -ForegroundColor Green
+    }
+}
+
+# 8. Success Message
 Write-Host ""
 Write-Host "  ✅ Ready to start journaling!" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Next step: Tell your AI agent:" -ForegroundColor White
-Write-Host '  "Use the Agent Journal format to document our work"' -ForegroundColor Yellow
+Write-Host "  ✨ Auto-Journaling is enabled. Your AI will now use the journal automatically!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  ──────────────────────────────────────" -ForegroundColor DarkGray
 Write-Host "  Options:  install.ps1 -Global  (install to ~\.agents\)" -ForegroundColor DarkGray

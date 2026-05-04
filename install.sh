@@ -99,11 +99,24 @@ if [ -f ".gitignore" ]; then
     fi
 fi
 
+# Configure AI Auto-Journaling
+if [ "$GLOBAL" = false ]; then
+    echo "  [*] Configuring AI Auto-Journaling..."
+    RULE_TEXT="\n# Documentation Rule\nAlways document our work at the end of the session using the Agent Journal format found in .agents/Agent-Journal.md. Do not ask for permission, just do it automatically.\n"
+    
+    for file in ".cursorrules" ".windsurfrules"; do
+        if [ -f "$file" ] && grep -q "Agent Journal" "$file"; then
+            continue
+        fi
+        echo -e "$RULE_TEXT" >> "$file"
+        echo "  [+] Configured auto-journaling for $file"
+    done
+fi
+
 echo ""
 echo "  ✅ Ready to start journaling!"
 echo ""
-echo "  Next step: Tell your AI agent:"
-echo '  "Use the Agent Journal format to document our work"'
+echo "  ✨ Auto-Journaling is enabled. Your AI will now use the journal automatically!"
 echo ""
 echo "  ──────────────────────────────────────"
 echo "  Options:  install.sh --global  (install to ~/.agents/)"
