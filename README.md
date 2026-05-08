@@ -20,11 +20,12 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 |---------|-------------|
 | 🧠 **Decision Memory** | Captures *why* decisions were made, not just *what* changed |
 | 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map so AI doesn't get lost |
+| 🛡️ **Pre-Journaling** | AI logs its plan *before* coding to prevent lost context if tokens run out |
 | 📱 **Truly Portable** | Plain Markdown — read on your phone, Obsidian, VS Code, anywhere |
 | 🎯 **Impact Tracking** | Status badges, impact levels, and risk flags for every session |
 | 📋 **TL;DR Summaries** | Skim 50 sessions in under a minute |
 | 🔄 **Flexible Format** | Full format for features, mini format for quick fixes |
-| ⚡ **Zero Setup** | One command to install, one sentence to activate |
+| ⚡ **Zero Setup** | One command to install, auto-configures AI rules |
 
 ---
 

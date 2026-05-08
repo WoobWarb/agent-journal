@@ -102,7 +102,7 @@ fi
 # Configure AI Auto-Journaling
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling..."
-    RULE_TEXT="\n# Documentation Rule\nAlways document our work at the end of the session using the Agent Journal format found in .agents/Agent-Journal.md. Do not ask for permission, just do it automatically.\n"
+    RULE_TEXT="\n# Documentation Rule\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to 🔄 In Progress and list planned actions.\n- COMPLETION: Once work is complete, update the entry's status to ✅ Complete.\n- Read .agents/PROJECT_MAP.md (if it exists) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
     
     for file in ".cursorrules" ".windsurfrules"; do
         if [ -f "$file" ] && grep -q "Agent Journal" "$file"; then

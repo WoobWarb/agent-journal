@@ -87,7 +87,7 @@ if (Test-Path $gitignorePath) {
 # 7. Configure AI Auto-Journaling
 if (-not $Global) {
     Write-Host "  [*] Configuring AI Auto-Journaling..." -ForegroundColor Gray
-    $RuleText = "`n# Documentation Rule`nAlways document our work at the end of the session using the Agent Journal format found in `.agents/Agent-Journal.md`. Do not ask for permission, just do it automatically.`n"
+    $RuleText = "`n# Documentation Rule`n- PRE-JOURNALING: ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE making any code changes. Set status to `🔄 In Progress` and list planned actions.`n- COMPLETION: Once work is complete, update the entry's status to `✅ Complete`.`n- Read `.agents/PROJECT_MAP.md` (if it exists) before starting.`n- Do not ask for permission to journal, just do it automatically.`n"
     
     $RulesFiles = @(".cursorrules", ".windsurfrules")
     foreach ($file in $RulesFiles) {
