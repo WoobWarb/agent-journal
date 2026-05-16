@@ -21,10 +21,12 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 | 🧠 **Decision Memory** | Captures *why* decisions were made, not just *what* changed |
 | 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map so AI doesn't get lost |
 | 🛡️ **Pre-Journaling** | AI logs its plan *before* coding to prevent lost context if tokens run out |
+| 🔨 **Step-by-Step Logging** | Logs every action *before* executing — never lose progress when tokens run out |
+| 🔄 **Handoff Protocol** | Seamless AI-to-AI handoff with resume points when switching agents |
 | 📱 **Truly Portable** | Plain Markdown — read on your phone, Obsidian, VS Code, anywhere |
 | 🎯 **Impact Tracking** | Status badges, impact levels, and risk flags for every session |
 | 📋 **TL;DR Summaries** | Skim 50 sessions in under a minute |
-| 🔄 **Flexible Format** | Full format for features, mini format for quick fixes |
+| 🌐 **Universal Setup** | `setup.ps1` configures Claude Code, Cursor, Windsurf, and Antigravity at once |
 | ⚡ **Zero Setup** | One command to install, auto-configures AI rules |
 
 ---
@@ -84,10 +86,16 @@ The **Agent Map** is a "knowledge graph" that gives your AI an instant understan
 ### TL;DR
 > Rebuilt login with glassmorphism card and Google OAuth2 integration.
 
-### 📝 Actions
-- [x] Implemented glassmorphism card `src/Login.jsx`
-- [x] Added Google OAuth2 flow `src/hooks/useAuth.js`
+### 📝 Planned Actions
+- [x] Implement glassmorphism card
+- [x] Add Google OAuth2 flow
 - [ ] ⏳ Add "Remember Me" functionality
+
+### 🔨 Execution Log
+1. ✅ `Created src/components/Login.jsx` — Glassmorphism card with blur backdrop
+2. ✅ `Created src/styles/login.css` — Glass effect + responsive layout
+3. ✅ `Created src/hooks/useAuth.js` — OAuth2 flow with Google provider
+4. ✅ `Modified src/App.jsx` — Added /login route with auth guard
 
 ### 🤔 Decisions
 - Chose OAuth over email/password for better UX
@@ -103,6 +111,36 @@ The **Agent Map** is a "knowledge graph" that gives your AI an instant understan
 
 ### 💡 Notes
 - Need to request OAuth Client ID from Google Console before deploy
+```
+
+---
+
+## 🔄 Token Limit Recovery
+
+The **Execution Log** + **Handoff Protocol** solve the biggest pain point: **token limits cutting your AI mid-task.**
+
+**How it works:**
+
+1. AI logs each step *before* executing it
+2. When tokens run out, the journal shows exactly what's done vs. remaining
+3. Open a new AI session and say: *"Read `.agents/Agent-Journal.md` and resume"*
+4. New AI reads the Execution Log and continues from the right step
+
+```markdown
+## [2026-05-16] | Adding payment system
+**Status:** ⚠️ Partial (token limit reached)
+
+### 🔨 Execution Log
+1. ✅ `Created src/services/payment.ts` — Stripe integration
+2. ✅ `Modified prisma/schema.prisma` — Payment model
+3. ✅ `Ran prisma migrate` — Applied migration
+4. ⏳ `Creating src/api/webhooks/stripe.ts` — INCOMPLETE
+5. 🔲 `Create tests/payment.test.ts`
+6. 🔲 `Update README with payment docs`
+
+### 🔄 Handoff Note
+**Resume from:** Step 4 — webhook file exists but needs signature verification
+**Important context:** Using Stripe API v2023-10-16, test key in .env
 ```
 
 ---

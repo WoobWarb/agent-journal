@@ -52,10 +52,21 @@ Use the **Full Format** for significant work, or the **Mini Format** for quick f
 ### TL;DR
 > One or two sentences summarizing what was accomplished and why.
 
-### 📝 Actions
-- [x] Completed task description (`path/to/file`)
+### 📝 Planned Actions
+- [x] Completed task description
 - [x] Another completed task
 - [ ] ⏳ Pending task for next session
+
+### 🔨 Execution Log
+> Log every step BEFORE doing it. Update status AFTER. This ensures no work is lost if tokens run out.
+
+1. ✅ `Created path/to/file1.js` — What was done and why
+2. ✅ `Modified path/to/file2.js` — What changed
+3. ⏳ `Working on path/to/file3.js` — Current step (in progress)
+4. 🔲 `Create path/to/file4.js` — Not started yet
+5. 🔲 `Update config` — Not started yet
+
+> **Icons:** 🔲 Planned | ⏳ In Progress | ✅ Done | ❌ Failed
 
 ### 🤔 Decisions
 - Chose X over Y because [reason]
@@ -71,6 +82,14 @@ Use the **Full Format** for significant work, or the **Mini Format** for quick f
 
 ### 💡 Notes
 - Additional context, gotchas, or reminders for next session
+
+### 🔄 Handoff Note (if interrupted)
+> Write this when tokens are running low or switching to another AI.
+
+**Last completed step:** N of M
+**Resume from:** Step N+1 — description
+**Current state:** What works, what doesn't
+**Important context:** Anything the next AI must know
 ```
 
 ---
@@ -117,3 +136,5 @@ Use the **Full Format** for significant work, or the **Mini Format** for quick f
 3. **Flag risks early** — Blockers section prevents forgotten issues
 4. **Use Mini Format** — Don't over-document trivial fixes
 5. **Keep TL;DR short** — If someone reads only one line, make it count
+6. **Log before you do** — Write each execution step BEFORE executing it, so nothing is lost if tokens run out
+7. **Write handoff notes** — When tokens are low or switching AI, write a Handoff Note with resume point and context
