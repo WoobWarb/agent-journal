@@ -71,6 +71,16 @@ fi
 
 echo "  [+] Successfully installed Agent-Journal.md"
 
+# Download viewer
+echo "  [*] Downloading Journal Viewer..."
+VIEWER_PATH="$DEST_DIR/journal-viewer.html"
+if command -v curl &> /dev/null; then
+    curl -fsSL "$REPO_URL/journal-viewer.html" -o "$VIEWER_PATH"
+elif command -v wget &> /dev/null; then
+    wget -q "$REPO_URL/journal-viewer.html" -O "$VIEWER_PATH"
+fi
+echo "  [+] Successfully installed journal-viewer.html"
+
 # Download and run Agent Map (only for local installs)
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Downloading Agent Map generator..."
@@ -117,6 +127,8 @@ echo ""
 echo "  ✅ Ready to start journaling!"
 echo ""
 echo "  ✨ Auto-Journaling is enabled. Your AI will now use the journal automatically!"
+echo ""
+echo "  📊 View your journal: open .agents/journal-viewer.html in any browser"
 echo ""
 echo "  ──────────────────────────────────────"
 echo "  Options:  install.sh --global  (install to ~/.agents/)"
