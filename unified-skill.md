@@ -1,6 +1,6 @@
 # Universal Agent Skill: Context + Journal + Map
 
-**Version:** 3.1
+**Version:** 3.2
 **Compatible:** Claude Code, Antigravity, Cursor, Windsurf, GitHub Copilot, any LLM agent
 
 ---
@@ -74,7 +74,40 @@ Update the same entry:
 - Check off completed actions
 - Add any notes or blockers discovered
 
-### 5. Session Context
+### 5. Generate HTML Companion (AFTER every journal update)
+
+**"HTML is the new Markdown"** — After writing or updating `Agent-Journal.md`, generate a companion `Agent-Journal.html` that opens instantly in any browser without needing a file upload.
+
+Create `.agents/Agent-Journal.html` with this exact structure:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Journal</title>
+</head>
+<body>
+<script>
+window.JOURNAL_DATA = `PASTE_ESCAPED_MD_CONTENT_HERE`;
+</script>
+<!-- Viewer source: copy the full contents of journal-viewer.html below this line -->
+VIEWER_HTML_PLACEHOLDER
+</body>
+</html>
+```
+
+**Steps to generate:**
+1. Read the current `.agents/Agent-Journal.md` content
+2. Escape any backtick (`` ` ``) characters in the content: replace `` ` `` with `` \` ``
+3. Create `.agents/Agent-Journal.html` using the template above
+4. In `window.JOURNAL_DATA = \`...\``, paste the escaped markdown between the backticks
+5. The viewer will auto-detect this data and display the dashboard immediately — no file upload needed
+
+**Why this matters:** Long markdown files don't get read. An HTML dashboard always gets opened.
+
+### 6. Session Context
 
 Update `.agents/active.md` with current task focus so the next session can resume.
 Include the last completed step number so the next agent knows the exact resume point.
@@ -104,7 +137,8 @@ If you sense the conversation is getting long or the user mentions switching:
 ```
 .agents/
 ├── AGENTS.md           # This rules file (universal)
-├── Agent-Journal.md    # Human-readable work diary
+├── Agent-Journal.md    # Human-readable work diary (source of truth)
+├── Agent-Journal.html  # ✨ Auto-generated HTML companion — open in browser
 ├── active.md           # Current task context (for AI resume)
 ├── PROJECT_MAP.md      # Auto-generated codebase map
 ├── graph.json          # Machine-readable project graph
@@ -225,3 +259,4 @@ Just tell it: "Follow the rules in .agents/AGENTS.md"
 | `@agents resume` | Load context and continue work |
 | `@agents update map` | Regenerate PROJECT_MAP.md |
 | `@agents list sessions` | Show recent session files |
+| `@agents generate html` | Regenerate `Agent-Journal.html` from current `.md` |

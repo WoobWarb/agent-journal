@@ -30,6 +30,7 @@
                 <a href="#how-it-works">How It Works</a>
                 <a href="#features">Features</a>
                 <a href="#comparison">Before & After</a>
+                <a href="#html-new-md">HTML Plan</a>
                 <a href="#setup">Install</a>
                 <a href="https://github.com/WoobWarb/agent-journal" target="_blank" class="github-btn">⭐ GitHub</a>
             </div>
@@ -179,6 +180,123 @@
 <span class="md-h3">### 🤔 Decisions</span>
 <span class="md-check">- Chose OAuth over email/pass for UX</span>
 <span class="md-check">- Used glassmorphism to match design system</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compatible With -->
+    <section class="compatible">
+
+    <!-- HTML is the new Markdown -->
+    <section id="html-new-md" class="html-new-md">
+        <div class="container">
+            <div class="section-title reveal">
+                <span class="quote-source-badge">💡 Insight from Anthropic's Claude Code Team</span>
+                <h2>HTML is the new Markdown</h2>
+                <p>Thariq Shihipar, engineer at Anthropic, stopped reading his own Markdown plans. So he switched to HTML — and you should too.</p>
+            </div>
+
+            <!-- Pull quote -->
+            <div class="pull-quote reveal">
+                <div class="pull-quote-inner">
+                    <div class="quote-mark">&ldquo;</div>
+                    <blockquote>I stopped reading Markdown plan files when they hit 1,000 lines.<br>That was a mistake. HTML brings me back into the loop.</blockquote>
+                    <div class="quote-attribution">
+                        <div class="quote-avatar">T</div>
+                        <div>
+                            <div class="quote-name">Thariq Shihipar</div>
+                            <div class="quote-role">Engineer, Claude Code · Anthropic — How I AI podcast</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problem vs Solution -->
+            <div class="html-md-grid reveal">
+                <div class="html-md-card problem">
+                    <div class="html-md-label">❌ The Problem</div>
+                    <h3>Markdown plans nobody reads</h3>
+                    <ul class="html-md-list">
+                        <li>Agent runs for hours → plan grows to 1,000+ lines</li>
+                        <li>You scroll past it without reading</li>
+                        <li>You tell Claude to fix the plan instead of fixing it yourself</li>
+                        <li>You lose the human-in-the-loop</li>
+                    </ul>
+                    <div class="md-preview-box">
+                        <div class="md-preview-line" style="width:90%"></div>
+                        <div class="md-preview-line" style="width:75%"></div>
+                        <div class="md-preview-line" style="width:85%"></div>
+                        <div class="md-preview-line" style="width:60%"></div>
+                        <div class="md-preview-line" style="width:80%"></div>
+                        <div class="md-preview-line" style="width:70%"></div>
+                        <div class="md-preview-line" style="width:88%"></div>
+                        <div class="md-preview-line" style="width:65%; opacity:.3"></div>
+                        <div class="md-preview-line" style="width:78%; opacity:.2"></div>
+                        <div class="md-preview-line" style="width:82%; opacity:.1"></div>
+                        <div class="md-fade-out"></div>
+                    </div>
+                </div>
+
+                <div class="html-md-arrow">
+                    <div class="arrow-line"></div>
+                    <div class="arrow-tip">→</div>
+                    <div class="arrow-label">Agent Journal<br>auto-generates</div>
+                </div>
+
+                <div class="html-md-card solution">
+                    <div class="html-md-label">✅ The Solution</div>
+                    <h3>HTML dashboards people actually open</h3>
+                    <ul class="html-md-list">
+                        <li>Same journal, now auto-rendered as a visual dashboard</li>
+                        <li>Filter by status, search, see progress bars</li>
+                        <li>Open in any browser — no tools needed</li>
+                        <li>You stay in the loop, every session</li>
+                    </ul>
+                    <!-- Mini dashboard mockup -->
+                    <div class="mini-dashboard">
+                        <div class="mini-db-bar">
+                            <span class="mini-db-logo">📓 My Project</span>
+                            <div class="mini-db-pills">
+                                <span class="mini-pill active">All</span>
+                                <span class="mini-pill">✅ Done</span>
+                                <span class="mini-pill">🔄 Active</span>
+                            </div>
+                        </div>
+                        <div class="mini-card complete">
+                            <div class="mini-card-meta"><span class="mini-date">2026-05-21</span><span class="mini-tag done">✅ Complete</span><span class="mini-tag feature">🚀 Feature</span><span class="mini-tag high">🔴 High</span></div>
+                            <div class="mini-card-title">Built auth with OAuth2 + glassmorphism UI</div>
+                            <div class="mini-progress"><div class="mini-progress-fill" style="width:100%"></div></div>
+                        </div>
+                        <div class="mini-card in-progress">
+                            <div class="mini-card-meta"><span class="mini-date">2026-05-21</span><span class="mini-tag wip">🔄 In Progress</span><span class="mini-tag feature">🚀 Feature</span></div>
+                            <div class="mini-card-title">Adding CSV → interactive dashboard export</div>
+                            <div class="mini-progress"><div class="mini-progress-fill" style="width:60%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flow diagram -->
+            <div class="html-flow reveal">
+                <div class="flow-step">
+                    <div class="flow-icon">📝</div>
+                    <div class="flow-label">Agent writes<br><code>Agent-Journal.md</code></div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">⚡</div>
+                    <div class="flow-label">Auto-generates<br><code>Agent-Journal.html</code></div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">🌐</div>
+                    <div class="flow-label">Open in browser<br><span class="flow-badge">🟢 Live</span></div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">👁️</div>
+                    <div class="flow-label">You stay<br>in the loop</div>
                 </div>
             </div>
         </div>
