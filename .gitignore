@@ -1,0 +1,11 @@
+# Don't commit the maintainer's own working journal — installers create these
+# fresh in each user's project, so they should never live in the public template.
+.agents/Agent-Journal.md
+.agents/Agent-Journal.html
+.agents/active.md
+.agents/PROJECT_MAP.md
+.agents/graph.json
+.agents/sessions/
+.agents/topics/
+.agents/index/
+.agents/private/
