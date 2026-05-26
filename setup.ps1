@@ -48,6 +48,20 @@ if (Test-Path $skillSource) {
 
 # Create Agent-Journal.md (empty template)
 $journalPath = Join-Path $agentsDir "Agent-Journal.md"
+$ExistingSessions = ""
+
+if (Test-Path $journalPath) {
+    if (-not $Force) {
+        Write-Host "  [=] Agent-Journal.md already exists (skipped)" -ForegroundColor DarkGray
+    } else {
+        $content = Get-Content $journalPath -Raw
+        if ($content -match "(?s)(---\s*\r?\n\s*##\s*\[.*)") {
+            $ExistingSessions = $Matches[1]
+            Write-Host "  [i] Found existing session logs. They will be preserved and merged." -ForegroundColor Gray
+        }
+    }
+}
+
 if (-not (Test-Path $journalPath) -or $Force) {
     $journalContent = @"
 # Agent Journal
@@ -57,8 +71,14 @@ if (-not (Test-Path $journalPath) -or $Force) {
 ---
 
 "@
-    Set-Content $journalPath $journalContent -Encoding UTF8
-    Write-Host "  [+] Created Agent-Journal.md" -ForegroundColor Green
+    if ($ExistingSessions) {
+        $journalContent = $journalContent.TrimEnd() + "`n`n" + $ExistingSessions.Trim() + "`n"
+        Set-Content $journalPath $journalContent -Encoding UTF8
+        Write-Host "  [+] Updated Agent-Journal.md (merged old sessions)" -ForegroundColor Green
+    } else {
+        Set-Content $journalPath $journalContent -Encoding UTF8
+        Write-Host "  [+] Created Agent-Journal.md" -ForegroundColor Green
+    }
 }
 
 # Create active.md

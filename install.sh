@@ -45,31 +45,56 @@ fi
 
 DEST_PATH="$DEST_DIR/$SKILL_FILE"
 
-# Check existing
-if [ -f "$DEST_PATH" ] && [ "$FORCE" = false ]; then
+# Check existing and extract session logs to preserve
+EXISTING_SESSIONS=""
+if [ -f "$DEST_PATH" ]; then
     echo ""
     echo "  [!] Agent-Journal.md already exists!"
-    read -p "      Overwrite? (y/N) " answer
-    if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
-        echo "  [x] Installation cancelled."
-        echo ""
-        exit 0
+    
+    # Extract session logs starting with --- followed by ## [
+    if command -v python3 &> /dev/null; then
+        EXISTING_SESSIONS=$(python3 -c "import sys, re; content=open('$DEST_PATH','r',encoding='utf-8').read(); m=re.search(r'(?s)---\s*\r?\n\s*##\s*\[.*', content); print(m.group(0)) if m else None" 2>/dev/null)
+    elif command -v python &> /dev/null; then
+        EXISTING_SESSIONS=$(python -c "import sys, re; content=open('$DEST_PATH','r',encoding='utf-8').read(); m=re.search(r'(?s)---\s*\r?\n\s*##\s*\[.*', content); print(m.group(0)) if m else None" 2>/dev/null)
+    fi
+    
+    if [ ! -z "$EXISTING_SESSIONS" ]; then
+        echo "  [i] Found existing session logs. They will be preserved and merged."
+    fi
+    
+    if [ "$FORCE" = false ]; then
+        read -p "      Update installer files & merge existing journal? (Y/n) " answer
+        if [[ "$answer" = "n" || "$answer" = "N" ]]; then
+            echo "  [x] Installation cancelled."
+            echo ""
+            exit 0
+        fi
     fi
 fi
 
 # Download
 echo "  [*] Downloading template from GitHub..."
+TEMP_PATH=$(mktemp)
 
 if command -v curl &> /dev/null; then
-    curl -fsSL "$REPO_URL/$SKILL_FILE" -o "$DEST_PATH"
+    curl -fsSL "$REPO_URL/$SKILL_FILE" -o "$TEMP_PATH"
 elif command -v wget &> /dev/null; then
-    wget -q "$REPO_URL/$SKILL_FILE" -O "$DEST_PATH"
+    wget -q "$REPO_URL/$SKILL_FILE" -O "$TEMP_PATH"
 else
     echo "  [!] Error: curl or wget is required."
+    rm -f "$TEMP_PATH"
     exit 1
 fi
 
-echo "  [+] Successfully installed Agent-Journal.md"
+if [ ! -z "$EXISTING_SESSIONS" ]; then
+    cat "$TEMP_PATH" > "$DEST_PATH"
+    echo -e "\n\n$EXISTING_SESSIONS" >> "$DEST_PATH"
+    echo "  [+] Successfully updated Agent-Journal.md (merged old sessions)"
+else
+    cat "$TEMP_PATH" > "$DEST_PATH"
+    echo "  [+] Successfully installed Agent-Journal.md"
+fi
+rm -f "$TEMP_PATH"
 
 # Download viewer
 echo "  [*] Downloading Journal Viewer..."

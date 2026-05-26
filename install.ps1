@@ -35,17 +35,27 @@ if (-not (Test-Path $DestDir)) {
     Write-Host "  [=] Directory already exists: .agents/" -ForegroundColor DarkGray
 }
 
-# 3. Check for existing file
+# 3. Check for existing file and preserve sessions
 $DestPath = Join-Path $DestDir $SkillFile
+$ExistingSessions = ""
 
-if ((Test-Path $DestPath) -and (-not $Force)) {
+if (Test-Path $DestPath) {
     Write-Host ""
     Write-Host "  [!] Agent-Journal.md already exists!" -ForegroundColor Yellow
-    $answer = Read-Host "      Overwrite? (y/N)"
-    if ($answer -ne "y" -and $answer -ne "Y") {
-        Write-Host "  [x] Installation cancelled." -ForegroundColor Red
-        Write-Host ""
-        return
+    
+    $content = Get-Content $DestPath -Raw
+    if ($content -match "(?s)(---\s*\r?\n\s*##\s*\[.*)") {
+        $ExistingSessions = $Matches[1]
+        Write-Host "  [i] Found existing session logs. They will be preserved and merged." -ForegroundColor Gray
+    }
+    
+    if (-not $Force) {
+        $answer = Read-Host "      Update installer files & merge existing journal? (Y/n)"
+        if ($answer -eq "n" -or $answer -eq "N") {
+            Write-Host "  [x] Installation cancelled." -ForegroundColor Red
+            Write-Host ""
+            return
+        }
     }
 }
 
@@ -53,10 +63,21 @@ if ((Test-Path $DestPath) -and (-not $Force)) {
 Write-Host "  [*] Downloading template from GitHub..." -ForegroundColor Gray
 
 try {
-    Invoke-WebRequest -Uri "$RepoUrl/$SkillFile" -OutFile $DestPath -UseBasicParsing
-    Write-Host "  [+] Successfully installed Agent-Journal.md" -ForegroundColor Green
+    $TempPath = [System.IO.Path]::GetTempFileName()
+    Invoke-WebRequest -Uri "$RepoUrl/$SkillFile" -OutFile $TempPath -UseBasicParsing
+    $NewTemplate = Get-Content $TempPath -Raw
+    Remove-Item $TempPath
+    
+    if ($ExistingSessions) {
+        $MergedContent = $NewTemplate.TrimEnd() + "`n`n" + $ExistingSessions.Trim() + "`n"
+        Set-Content -Path $DestPath -Value $MergedContent -Encoding UTF8
+        Write-Host "  [+] Successfully updated Agent-Journal.md (merged old sessions)" -ForegroundColor Green
+    } else {
+        Set-Content -Path $DestPath -Value $NewTemplate -Encoding UTF8
+        Write-Host "  [+] Successfully installed Agent-Journal.md" -ForegroundColor Green
+    }
 } catch {
-    Write-Host "  [!] Download failed. Check your internet connection." -ForegroundColor Red
+    Write-Host "  [!] Download or write failed: $_" -ForegroundColor Red
     return
 }
 
