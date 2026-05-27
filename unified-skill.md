@@ -112,11 +112,11 @@ VIEWER_HTML_PLACEHOLDER
 Update `.agents/active.md` with current task focus so the next session can resume.
 Include the last completed step number so the next agent knows the exact resume point.
 
-### 6. Technical Decisions
+### 7. Technical Decisions
 
 For significant architectural decisions, add notes to `.agents/topics/[topic].md`.
 
-### 7. Handoff Protocol (when token limit is near or switching AI)
+### 8. Handoff Protocol (when token limit is near or switching AI)
 
 If you sense the conversation is getting long or the user mentions switching:
 1. Update all ⏳ steps to their actual status (✅ or ❌)

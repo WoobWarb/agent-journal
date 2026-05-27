@@ -165,6 +165,17 @@ if (-not $Global) {
         Write-Host "  [+] Configured .windsurfrules" -ForegroundColor Green
     }
 
+    # GitHub Copilot - .github/copilot-instructions.md
+    $githubDir = Join-Path $ProjectPath ".github"
+    if (-not (Test-Path $githubDir)) {
+        New-Item -ItemType Directory -Path $githubDir -Force | Out-Null
+    }
+    $copilotPath = Join-Path $githubDir "copilot-instructions.md"
+    if (-not (Test-Path $copilotPath) -or -not (Select-String -Path $copilotPath -Pattern "Agent Journal" -Quiet)) {
+        Add-Content $copilotPath $ruleBlock
+        Write-Host "  [+] Configured .github/copilot-instructions.md" -ForegroundColor Green
+    }
+
     # Antigravity
     $antigravDir = Join-Path $ProjectPath ".antigravity"
     if (-not (Test-Path $antigravDir)) {
@@ -195,10 +206,11 @@ Write-Host "  Setup complete!" -ForegroundColor Green
 Write-Host "  ══════════════════════════════════════════" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Installed for:" -ForegroundColor White
-Write-Host "    - Claude Code   (CLAUDE.md)" -ForegroundColor Gray
-Write-Host "    - Cursor        (.cursorrules)" -ForegroundColor Gray
-Write-Host "    - Windsurf      (.windsurfrules)" -ForegroundColor Gray
-Write-Host "    - Antigravity   (.antigravity/)" -ForegroundColor Gray
+Write-Host "    - Claude Code    (CLAUDE.md)" -ForegroundColor Gray
+Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
+Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
+Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
+Write-Host "    - Antigravity    (.antigravity/)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Your AI agent will now automatically:" -ForegroundColor White
 Write-Host "    1. Read PROJECT_MAP.md before working" -ForegroundColor Gray

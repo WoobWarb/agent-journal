@@ -96,6 +96,15 @@ else
 fi
 rm -f "$TEMP_PATH"
 
+# Download AGENTS.md (universal rules for all AI agents)
+echo "  [*] Downloading AGENTS.md (universal rules)..."
+AGENTS_MD_PATH="$DEST_DIR/AGENTS.md"
+if command -v curl &> /dev/null; then
+    curl -fsSL "$REPO_URL/unified-skill.md" -o "$AGENTS_MD_PATH" && echo "  [+] Successfully installed AGENTS.md" || echo "  [!] Could not download AGENTS.md (non-fatal)."
+elif command -v wget &> /dev/null; then
+    wget -q "$REPO_URL/unified-skill.md" -O "$AGENTS_MD_PATH" && echo "  [+] Successfully installed AGENTS.md" || echo "  [!] Could not download AGENTS.md (non-fatal)."
+fi
+
 # Download viewer
 echo "  [*] Downloading Journal Viewer..."
 VIEWER_PATH="$DEST_DIR/journal-viewer.html"
@@ -145,24 +154,58 @@ if [ -f ".gitignore" ]; then
     fi
 fi
 
-# Configure AI Auto-Journaling
+# Configure AI Auto-Journaling (all platforms)
 if [ "$GLOBAL" = false ]; then
-    echo "  [*] Configuring AI Auto-Journaling..."
-    RULE_TEXT="\n# Documentation Rule\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to 🔄 In Progress and list planned actions.\n- COMPLETION: Once work is complete, update the entry's status to ✅ Complete.\n- Read .agents/PROJECT_MAP.md (if it exists) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
-    
-    for file in ".cursorrules" ".windsurfrules"; do
-        if [ -f "$file" ] && grep -q "Agent Journal" "$file"; then
-            continue
-        fi
-        echo -e "$RULE_TEXT" >> "$file"
-        echo "  [+] Configured auto-journaling for $file"
-    done
+    echo "  [*] Configuring AI Auto-Journaling for all platforms..."
+    RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- COMPLETION: Once work is complete, update the entry's status to Complete.\n- Read .agents/PROJECT_MAP.md (if it exists) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
+
+    # Cursor
+    if ! ([ -f ".cursorrules" ] && grep -q "Agent Journal" ".cursorrules"); then
+        printf "%b" "$RULE_TEXT" >> ".cursorrules"
+        echo "  [+] Configured .cursorrules"
+    fi
+
+    # Windsurf
+    if ! ([ -f ".windsurfrules" ] && grep -q "Agent Journal" ".windsurfrules"); then
+        printf "%b" "$RULE_TEXT" >> ".windsurfrules"
+        echo "  [+] Configured .windsurfrules"
+    fi
+
+    # Claude Code - CLAUDE.md
+    if [ ! -f "CLAUDE.md" ]; then
+        printf "# Project Rules\n\nRead and follow \`.agents/AGENTS.md\` for journaling and context rules.\n%b" "$RULE_TEXT" > "CLAUDE.md"
+        echo "  [+] Created CLAUDE.md"
+    elif ! grep -q "Agent Journal" "CLAUDE.md"; then
+        printf "%b" "$RULE_TEXT" >> "CLAUDE.md"
+        echo "  [+] Updated CLAUDE.md with journal rules"
+    fi
+
+    # GitHub Copilot - .github/copilot-instructions.md
+    mkdir -p ".github"
+    if ! ([ -f ".github/copilot-instructions.md" ] && grep -q "Agent Journal" ".github/copilot-instructions.md"); then
+        printf "%b" "$RULE_TEXT" >> ".github/copilot-instructions.md"
+        echo "  [+] Configured .github/copilot-instructions.md"
+    fi
+
+    # Antigravity
+    mkdir -p ".antigravity"
+    if [ ! -f ".antigravity/extensions.json" ]; then
+        cat > ".antigravity/extensions.json" << 'EOF'
+{"version":"1.0","extensions":[{"id":"unified-agent-skill","name":"Agent Context + Journal","description":"Universal journaling, context saving, and project mapping","enabled":true,"path":"../.agents/AGENTS.md"}]}
+EOF
+        echo "  [+] Configured .antigravity/extensions.json"
+    fi
 fi
 
 echo ""
 echo "  ✅ Ready to start journaling!"
 echo ""
-echo "  ✨ Auto-Journaling is enabled. Your AI will now use the journal automatically!"
+echo "  ✨ Auto-Journaling configured for:"
+echo "    - Claude Code    (CLAUDE.md)"
+echo "    - Cursor         (.cursorrules)"
+echo "    - Windsurf       (.windsurfrules)"
+echo "    - GitHub Copilot (.github/copilot-instructions.md)"
+echo "    - Antigravity    (.antigravity/extensions.json)"
 echo "  🌐 HTML Companion enabled. Agent will generate Agent-Journal.html after each session."
 echo ""
 echo "  📊 Open .agents/Agent-Journal.html in any browser to view your journal dashboard"

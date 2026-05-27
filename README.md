@@ -151,11 +151,12 @@ Agent Journal works with **any AI coding assistant** that can write Markdown:
 
 | Agent | Status |
 |-------|--------|
+| ✨ Claude Code | ✅ Fully compatible |
 | 🚀 Antigravity (Google) | ✅ Fully compatible |
 | 🔮 Cursor | ✅ Fully compatible |
 | 🏄 Windsurf | ✅ Fully compatible |
 | 🤖 GitHub Copilot | ✅ Fully compatible |
-| ✨ Any LLM-based agent | ✅ Works out of the box |
+| 🧩 Any LLM-based agent | ✅ Works out of the box |
 
 ---
 
