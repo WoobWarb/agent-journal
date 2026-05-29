@@ -14,6 +14,9 @@ When working on this project, follow these rules automatically:
 If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
 This saves tokens and prevents hallucinations about project structure.
 
+If `.agents/pipeline.md` exists, read it before running any build, test, lint, or deploy commands.
+This tells you the exact commands for this project — don't guess or use defaults.
+
 ### 2. Pre-Journaling (BEFORE coding)
 
 Before making any code changes, write an entry in `.agents/Agent-Journal.md`:
@@ -140,6 +143,7 @@ If you sense the conversation is getting long or the user mentions switching:
 ├── Agent-Journal.md    # Human-readable work diary (source of truth)
 ├── Agent-Journal.html  # ✨ Auto-generated HTML companion — open in browser
 ├── active.md           # Current task context (for AI resume)
+├── pipeline.md         # Build, test, lint, and deploy commands for this project
 ├── PROJECT_MAP.md      # Auto-generated codebase map
 ├── graph.json          # Machine-readable project graph
 ├── sessions/           # Detailed session checkpoints

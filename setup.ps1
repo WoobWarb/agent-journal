@@ -81,6 +81,64 @@ if (-not (Test-Path $journalPath) -or $Force) {
     }
 }
 
+# Create pipeline.md
+$pipelinePath = Join-Path $agentsDir "pipeline.md"
+if (-not (Test-Path $pipelinePath)) {
+    $pipelineContent = @"
+# Pipeline
+
+> Fill this in so your AI knows exactly how to build, test, and deploy this project.
+> Read this file before running any commands — don't guess defaults.
+
+## Install
+
+``````bash
+# e.g. npm install / pip install -r requirements.txt / go mod tidy
+``````
+
+## Build
+
+``````bash
+# e.g. npm run build / go build ./... / python setup.py build
+``````
+
+## Test
+
+``````bash
+# e.g. npm test / pytest / go test ./...
+``````
+
+## Lint / Format
+
+``````bash
+# e.g. npm run lint / ruff check . / golangci-lint run
+``````
+
+## Run (dev)
+
+``````bash
+# e.g. npm run dev / uvicorn main:app --reload / go run main.go
+``````
+
+## Deploy
+
+``````bash
+# e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
+``````
+
+## CI/CD
+
+- Platform: <!-- GitHub Actions / GitLab CI / CircleCI / etc. -->
+- Config: <!-- path to workflow file, e.g. .github/workflows/ci.yml -->
+
+## Notes
+
+<!-- Anything else the AI should know: env vars required, secrets location, etc. -->
+"@
+    Set-Content $pipelinePath $pipelineContent -Encoding UTF8
+    Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
+}
+
 # Create active.md
 $activePath = Join-Path $agentsDir "active.md"
 $activeContent = @"
