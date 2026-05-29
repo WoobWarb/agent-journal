@@ -5,7 +5,8 @@ from pathlib import Path
 IGNORE_DIRS = {
     '.git', 'node_modules', '.venv', 'venv', '__pycache__',
     '.agents', 'dist', 'build', '.idea', '.vscode', '.next',
-    '.nuxt', '.output', 'coverage', '.pytest_cache', '.mypy_cache'
+    '.nuxt', '.output', 'coverage', '.pytest_cache', '.mypy_cache',
+    '.svn', '.hg', '.tox', '__snapshots__',
 }
 
 IGNORE_EXTS = {
@@ -20,7 +21,7 @@ def generate_map(root_dir='.'):
     file_details = []
 
     for current_root, dirs, files in os.walk(root_path):
-        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS and not d.startswith('.')]
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
 
         rel_path = Path(current_root).relative_to(root_path)
         level = len(rel_path.parts) if rel_path.name else 0

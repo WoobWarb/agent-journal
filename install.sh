@@ -148,7 +148,7 @@ fi
 
 # Add to .gitignore
 if [ -f ".gitignore" ]; then
-    if ! grep -q ".agents/" .gitignore; then
+    if ! grep -q "\.agents/" .gitignore; then
         echo -e "\n# Agent Journal\n.agents/" >> .gitignore
         echo "  [+] Added .agents/ to .gitignore"
     fi

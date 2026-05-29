@@ -24,6 +24,9 @@ if ($Global) {
     $ProjectPath = Join-Path $env:USERPROFILE ".agents-global"
     Write-Host "  Mode: Global (~/.agents-global/)" -ForegroundColor Gray
 } else {
+    if (-not (Test-Path $ProjectPath)) {
+        New-Item -ItemType Directory -Path $ProjectPath -Force | Out-Null
+    }
     $ProjectPath = Resolve-Path $ProjectPath
     Write-Host "  Project: $ProjectPath" -ForegroundColor Gray
 }
@@ -178,7 +181,7 @@ if (-not $SkipMap -and -not $Global) {
     Write-Host "  [*] Generating project map..." -ForegroundColor Gray
     Push-Location $ProjectPath
     try {
-        python agent-map.py 2>$null
+        python agent-map.py
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  [+] Generated PROJECT_MAP.md" -ForegroundColor Green
         }
