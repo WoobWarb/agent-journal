@@ -141,14 +141,14 @@ if (-not $Global) {
 - Do not ask for permission to journal, just do it automatically.
 "@
 
-    # Claude Code - CLAUDE.md
+    # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
     $claudeMd = Join-Path $ProjectPath "CLAUDE.md"
     if (-not (Test-Path $claudeMd)) {
-        Set-Content $claudeMd "# Project Rules`n`nRead and follow ``.agents/AGENTS.md`` for journaling and context rules.`n$ruleBlock" -Encoding UTF8
+        Set-Content $claudeMd "# Project Rules`n`n@.agents/AGENTS.md`n" -Encoding UTF8
         Write-Host "  [+] Created CLAUDE.md" -ForegroundColor Green
-    } elseif (-not (Select-String -Path $claudeMd -Pattern "Agent Journal" -Quiet)) {
-        Add-Content $claudeMd "`n$ruleBlock"
-        Write-Host "  [+] Updated CLAUDE.md with journal rules" -ForegroundColor Green
+    } elseif (-not (Select-String -Path $claudeMd -Pattern "AGENTS\.md" -Quiet)) {
+        Add-Content $claudeMd "`n@.agents/AGENTS.md`n"
+        Write-Host "  [+] Updated CLAUDE.md with journal import" -ForegroundColor Green
     }
 
     # Cursor

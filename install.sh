@@ -171,13 +171,13 @@ if [ "$GLOBAL" = false ]; then
         echo "  [+] Configured .windsurfrules"
     fi
 
-    # Claude Code - CLAUDE.md
+    # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
     if [ ! -f "CLAUDE.md" ]; then
-        printf "# Project Rules\n\nRead and follow \`.agents/AGENTS.md\` for journaling and context rules.\n%b" "$RULE_TEXT" > "CLAUDE.md"
+        printf "# Project Rules\n\n@.agents/AGENTS.md\n" > "CLAUDE.md"
         echo "  [+] Created CLAUDE.md"
-    elif ! grep -q "Agent Journal" "CLAUDE.md"; then
-        printf "%b" "$RULE_TEXT" >> "CLAUDE.md"
-        echo "  [+] Updated CLAUDE.md with journal rules"
+    elif ! grep -q "AGENTS\.md" "CLAUDE.md"; then
+        printf "\n@.agents/AGENTS.md\n" >> "CLAUDE.md"
+        echo "  [+] Updated CLAUDE.md with journal import"
     fi
 
     # GitHub Copilot - .github/copilot-instructions.md

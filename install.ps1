@@ -152,14 +152,14 @@ if (-not $Global) {
         Write-Host "  [+] Configured .windsurfrules" -ForegroundColor Green
     }
 
-    # Claude Code - CLAUDE.md
+    # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
     $claudeMd = Join-Path (Get-Location) "CLAUDE.md"
     if (-not (Test-Path $claudeMd)) {
-        Set-Content $claudeMd "# Project Rules`n`nRead and follow `.agents/AGENTS.md` for journaling and context rules.`n$RuleText" -Encoding UTF8
+        Set-Content $claudeMd "# Project Rules`n`n@.agents/AGENTS.md`n" -Encoding UTF8
         Write-Host "  [+] Created CLAUDE.md" -ForegroundColor Green
-    } elseif (-not ((Get-Content $claudeMd -Raw) -match "Agent Journal")) {
-        Add-Content $claudeMd "`n$RuleText"
-        Write-Host "  [+] Updated CLAUDE.md with journal rules" -ForegroundColor Green
+    } elseif (-not ((Get-Content $claudeMd -Raw) -match "AGENTS\.md")) {
+        Add-Content $claudeMd "`n@.agents/AGENTS.md`n"
+        Write-Host "  [+] Updated CLAUDE.md with journal import" -ForegroundColor Green
     }
 
     # GitHub Copilot - .github/copilot-instructions.md
