@@ -11,7 +11,7 @@ $Version = "2.1.0"
 
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "  ║   📓 Agent Journal Installer v$Version  ║" -ForegroundColor Cyan
+Write-Host "  ║     Agent Journal Installer v$Version    ║" -ForegroundColor Cyan
 Write-Host "  ╚══════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
@@ -188,15 +188,15 @@ if (-not $Global) {
 
 # 8. Success Message
 Write-Host ""
-Write-Host "  ✅ Ready to start journaling!" -ForegroundColor Cyan
+Write-Host "  [OK] Ready to start journaling!" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  ✨ Auto-Journaling configured for:" -ForegroundColor Green
-Write-Host "    - Claude Code   (CLAUDE.md)" -ForegroundColor Gray
-Write-Host "    - Cursor        (.cursorrules)" -ForegroundColor Gray
-Write-Host "    - Windsurf      (.windsurfrules)" -ForegroundColor Gray
+Write-Host "  Auto-Journaling configured for:" -ForegroundColor Green
+Write-Host "    - Claude Code    (CLAUDE.md)" -ForegroundColor Gray
+Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
+Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
-Write-Host "    - Antigravity   (.antigravity/extensions.json)" -ForegroundColor Gray
-Write-Host "  🌐 HTML Companion enabled. Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
+Write-Host "    - Antigravity    (.antigravity/extensions.json)" -ForegroundColor Gray
+Write-Host "  HTML Companion: Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
 Write-Host ""
 Write-Host "  ──────────────────────────────────────" -ForegroundColor DarkGray
 Write-Host "  Options:  install.ps1 -Global  (install to ~\.agents\)" -ForegroundColor DarkGray
