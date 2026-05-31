@@ -213,7 +213,7 @@ fi
 # Configure AI Auto-Journaling (all platforms)
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling for all platforms..."
-    RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- COMPLETION: Once work is complete, update the entry's status to Complete.\n- Read .agents/PROJECT_MAP.md (if it exists) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
+    RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
 
     # Cursor
     if ! ([ -f ".cursorrules" ] && grep -q "Agent Journal" ".cursorrules"); then
