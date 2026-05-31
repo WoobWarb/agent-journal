@@ -109,6 +109,63 @@ if (-not (Test-Path $HtmlJournalPath)) {
     Write-Host "  [+] Created Agent-Journal.html placeholder" -ForegroundColor Green
 }
 
+# 4e. Create pipeline.md template
+$PipelinePath = Join-Path $DestDir "pipeline.md"
+if (-not (Test-Path $PipelinePath)) {
+    $PipelineContent = @"
+# Pipeline
+
+> Fill this in so your AI knows exactly how to build, test, and deploy this project.
+> Read this file before running any commands -- don't guess defaults.
+
+## Install
+
+``````
+# e.g. npm install / pip install -r requirements.txt / go mod tidy
+``````
+
+## Build
+
+``````
+# e.g. npm run build / go build ./... / python setup.py build
+``````
+
+## Test
+
+``````
+# e.g. npm test / pytest / go test ./...
+``````
+
+## Lint / Format
+
+``````
+# e.g. npm run lint / ruff check . / golangci-lint run
+``````
+
+## Run (dev)
+
+``````
+# e.g. npm run dev / uvicorn main:app --reload / go run main.go
+``````
+
+## Deploy
+
+``````
+# e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
+``````
+
+## CI/CD
+
+- Platform:
+- Config:
+
+## Notes
+
+"@
+    Set-Content -Path $PipelinePath -Value $PipelineContent -Encoding UTF8
+    Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
+}
+
 # 5. Download and run Agent Map (only for local installs)
 if (-not $Global) {
     Write-Host "  [*] Downloading Agent Map generator..." -ForegroundColor Gray
