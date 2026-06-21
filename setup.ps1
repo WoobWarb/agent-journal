@@ -239,7 +239,7 @@ if (-not $Global) {
         Write-Host "  [+] Configured .github/copilot-instructions.md" -ForegroundColor Green
     }
 
-    # Antigravity
+    # Antigravity (Local config + Global Native Skill)
     $antigravDir = Join-Path $ProjectPath ".antigravity"
     if (-not (Test-Path $antigravDir)) {
         New-Item -ItemType Directory -Path $antigravDir -Force | Out-Null
@@ -260,6 +260,30 @@ if (-not $Global) {
 "@
     Set-Content (Join-Path $antigravDir "extensions.json") $extJson -Encoding UTF8
     Write-Host "  [+] Configured .antigravity/" -ForegroundColor Green
+    
+    # Antigravity Global Plugin
+    $antiGravPluginDir = Join-Path $env:USERPROFILE ".gemini\config\plugins\agent-journal-plugin\skills\agent_journal"
+    if (-not (Test-Path $antiGravPluginDir)) {
+        New-Item -ItemType Directory -Path $antiGravPluginDir -Force | Out-Null
+    }
+    $antiGravSkillMdPath = Join-Path $antiGravPluginDir "SKILL.md"
+    $antiGravSkillMdContent = @"
+---
+name: agent-journal
+description: Core system skill for logging and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md). You MUST read this skill before writing any code or modifying the project.
+---
+
+# Agent Journal Skill
+You must strictly follow these rules automatically for every task in this project.
+1. Read `.agents/PROJECT_MAP.md` if it exists.
+2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding.
+3. Log step-by-step Execution Log BEFORE each action.
+4. Update to `Complete` when done.
+5. Generate `Agent-Journal.html` after modifying the journal.
+6. Update `.agents/active.md`.
+"@
+    Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
+    Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
 }
 
 # Summary
@@ -273,7 +297,7 @@ Write-Host "    - Claude Code    (CLAUDE.md)" -ForegroundColor Gray
 Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
 Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
-Write-Host "    - Antigravity    (.antigravity/)" -ForegroundColor Gray
+Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Your AI agent will now automatically:" -ForegroundColor White
 Write-Host "    1. Read PROJECT_MAP.md before working" -ForegroundColor Gray
