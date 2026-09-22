@@ -1,7 +1,7 @@
 # Universal Agent Skill: Context + Journal + Map
 
-**Version:** 3.2
-**Compatible:** Claude Code, Antigravity, Cursor, Windsurf, GitHub Copilot, any LLM agent
+**Version:** 3.3
+**Compatible:** Claude Code, Cline, Antigravity, Cursor, Windsurf, GitHub Copilot, any LLM agent
 
 ---
 
@@ -164,6 +164,12 @@ Read and follow .agents/AGENTS.md for journaling rules.
 
 ### Cursor / Windsurf
 Rules are auto-added to `.cursorrules` / `.windsurfrules` by the installer.
+
+### Cline
+- **Workspace rule** — `.clinerules/agent-journal.md` (always active, toggleable in Cline's Rules panel). Auto-created by the installer.
+- **Native skill** — `.cline/skills/agent-journal/SKILL.md`. Cline activates it automatically when the request matches, or invoke it explicitly with `/agent-journal` in chat.
+- Note: Cline also auto-detects `.cursorrules`, `.windsurfrules`, and a root-level `AGENTS.md`, so journaling rules apply to Cline out of the box even on plain installs.
+- Global installs write the rule to `~/.cline/rules/agent-journal.md`.
 
 ### Antigravity
 Register as skill in `.antigravity/extensions.json`:

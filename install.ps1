@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "2.1.0"
+$Version = "2.2.0"
 
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════╗" -ForegroundColor Cyan
@@ -166,6 +166,25 @@ if (-not (Test-Path $PipelinePath)) {
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
 }
 
+# 4f. Download Cline skill template (SKILL.md)
+if ($Global) {
+    $ClineSkillDir = Join-Path $env:USERPROFILE ".cline\skills\agent-journal"
+    Write-Host "  [*] Downloading Cline skill (global)..." -ForegroundColor Gray
+} else {
+    $ClineSkillDir = Join-Path (Get-Location) ".cline\skills\agent-journal"
+    Write-Host "  [*] Downloading Cline skill..." -ForegroundColor Gray
+}
+$ClineSkillPath = Join-Path $ClineSkillDir "SKILL.md"
+try {
+    if (-not (Test-Path $ClineSkillDir)) {
+        New-Item -ItemType Directory -Path $ClineSkillDir -Force | Out-Null
+    }
+    Invoke-WebRequest -Uri "$RepoUrl/cline-skill.md" -OutFile $ClineSkillPath -UseBasicParsing
+    Write-Host "  [+] Successfully installed SKILL.md (Cline skill)" -ForegroundColor Green
+} catch {
+    Write-Host "  [!] Could not download Cline skill (non-fatal)." -ForegroundColor Yellow
+}
+
 # 5. Download and run Agent Map (only for local installs)
 if (-not $Global) {
     Write-Host "  [*] Downloading Agent Map generator..." -ForegroundColor Gray
@@ -191,9 +210,21 @@ if (Test-Path $gitignorePath) {
 }
 
 # 7. Configure AI Auto-Journaling (all platforms)
+$RuleText = "`n# Agent Journal Rules`n- Read and follow .agents/AGENTS.md for journaling and context rules.`n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.`n- EXECUTION LOG: Before each action, log it with status icon (🔲 planned, ⏳ in progress, ✅ done, ❌ failed). Write the step BEFORE executing it.`n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.`n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.`n- Do not ask for permission to journal, just do it automatically.`n"
+
 if (-not $Global) {
     Write-Host "  [*] Configuring AI Auto-Journaling for all platforms..." -ForegroundColor Gray
-    $RuleText = "`n# Agent Journal Rules`n- Read and follow .agents/AGENTS.md for journaling and context rules.`n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.`n- EXECUTION LOG: Before each action, log it with status icon (🔲 planned, ⏳ in progress, ✅ done, ❌ failed). Write the step BEFORE executing it.`n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.`n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.`n- Do not ask for permission to journal, just do it automatically.`n"
+
+    # Cline - .clinerules/agent-journal.md (always-active workspace rule)
+    $ClineRulesDir = Join-Path (Get-Location) ".clinerules"
+    if (-not (Test-Path $ClineRulesDir)) {
+        New-Item -ItemType Directory -Path $ClineRulesDir -Force | Out-Null
+    }
+    $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
+    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+        Set-Content $ClineRulePath $RuleText -Encoding UTF8
+        Write-Host "  [+] Configured .clinerules/agent-journal.md (Cline rule)" -ForegroundColor Green
+    }
 
     # Cursor
     $cursorPath = Join-Path (Get-Location) ".cursorrules"
@@ -265,6 +296,17 @@ You must strictly follow these rules automatically for every task in this projec
 "@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
+} else {
+    # Cline global rule (~/.cline/rules/agent-journal.md)
+    $ClineRulesDir = Join-Path $env:USERPROFILE ".cline\rules"
+    if (-not (Test-Path $ClineRulesDir)) {
+        New-Item -ItemType Directory -Path $ClineRulesDir -Force | Out-Null
+    }
+    $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
+    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+        Set-Content $ClineRulePath $RuleText -Encoding UTF8
+        Write-Host "  [+] Configured Cline global rule (~\.cline\rules\agent-journal.md)" -ForegroundColor Green
+    }
 }
 
 # 8. Success Message
@@ -277,6 +319,7 @@ Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
 Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
 Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -ForegroundColor Gray
+Write-Host "    - Cline          (.clinerules\ + .cline\skills\agent-journal\)" -ForegroundColor Gray
 Write-Host "  HTML Companion: Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
 Write-Host ""
 Write-Host "  ──────────────────────────────────────" -ForegroundColor DarkGray

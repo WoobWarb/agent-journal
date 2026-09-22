@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="2.1.0"
+VERSION="2.2.0"
 REPO_URL="https://raw.githubusercontent.com/WoobWarb/agent-journal/main"
 SKILL_FILE="Agent-Journal.md"
 GLOBAL=false
@@ -182,6 +182,23 @@ EOF
     echo "  [+] Created pipeline.md"
 fi
 
+# Download Cline skill template (SKILL.md)
+if [ "$GLOBAL" = true ]; then
+    CLINE_SKILL_DIR="$HOME/.cline/skills/agent-journal"
+    echo "  [*] Downloading Cline skill (global)..."
+else
+    CLINE_SKILL_DIR="$(pwd)/.cline/skills/agent-journal"
+    echo "  [*] Downloading Cline skill..."
+fi
+mkdir -p "$CLINE_SKILL_DIR"
+if command -v curl &> /dev/null; then
+    curl -fsSL "$REPO_URL/cline-skill.md" -o "$CLINE_SKILL_DIR/SKILL.md" && echo "  [+] Successfully installed SKILL.md (Cline skill)" || echo "  [!] Could not download Cline skill (non-fatal)."
+elif command -v wget &> /dev/null; then
+    wget -q "$REPO_URL/cline-skill.md" -O "$CLINE_SKILL_DIR/SKILL.md" && echo "  [+] Successfully installed SKILL.md (Cline skill)" || echo "  [!] Could not download Cline skill (non-fatal)."
+else
+    echo "  [!] Could not download Cline skill (non-fatal)."
+fi
+
 # Download and run Agent Map (only for local installs)
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Downloading Agent Map generator..."
@@ -211,9 +228,17 @@ if [ -f ".gitignore" ]; then
 fi
 
 # Configure AI Auto-Journaling (all platforms)
+RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
+
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling for all platforms..."
-    RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
+
+    # Cline - .clinerules/agent-journal.md (always-active workspace rule)
+    if ! ([ -f ".clinerules/agent-journal.md" ] && grep -q "Agent Journal" ".clinerules/agent-journal.md"); then
+        mkdir -p ".clinerules"
+        printf "%b" "$RULE_TEXT" > ".clinerules/agent-journal.md"
+        echo "  [+] Configured .clinerules/agent-journal.md (Cline rule)"
+    fi
 
     # Cursor
     if ! ([ -f ".cursorrules" ] && grep -q "Agent Journal" ".cursorrules"); then
@@ -251,6 +276,13 @@ if [ "$GLOBAL" = false ]; then
 EOF
         echo "  [+] Configured .antigravity/extensions.json"
     fi
+else
+    # Cline global rule (~/.cline/rules/agent-journal.md)
+    mkdir -p "$HOME/.cline/rules"
+    if ! ([ -f "$HOME/.cline/rules/agent-journal.md" ] && grep -q "Agent Journal" "$HOME/.cline/rules/agent-journal.md"); then
+        printf "%b" "$RULE_TEXT" > "$HOME/.cline/rules/agent-journal.md"
+        echo "  [+] Configured Cline global rule (~/.cline/rules/agent-journal.md)"
+    fi
 fi
 
 echo ""
@@ -262,6 +294,11 @@ echo "    - Cursor         (.cursorrules)"
 echo "    - Windsurf       (.windsurfrules)"
 echo "    - GitHub Copilot (.github/copilot-instructions.md)"
 echo "    - Antigravity    (.antigravity/extensions.json)"
+if [ "$GLOBAL" = true ]; then
+    echo "    - Cline          (global: ~/.cline/rules/ + ~/.cline/skills/)"
+else
+    echo "    - Cline          (.clinerules/ + .cline/skills/)"
+fi
 echo "  🌐 HTML Companion enabled. Agent will generate Agent-Journal.html after each session."
 echo ""
 echo "  📊 Open .agents/Agent-Journal.html in any browser to view your journal dashboard"

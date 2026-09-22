@@ -26,7 +26,7 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 | 📱 **Truly Portable** | Plain Markdown — read on your phone, Obsidian, VS Code, anywhere |
 | 🎯 **Impact Tracking** | Status badges, impact levels, and risk flags for every session |
 | 📋 **TL;DR Summaries** | Skim 50 sessions in under a minute |
-| 🌐 **Universal Setup** | `setup.ps1` configures Claude Code, Cursor, Windsurf, and Antigravity at once |
+| 🌐 **Universal Setup** | `setup.ps1` configures Claude Code, Cline, Cursor, Windsurf, and Antigravity at once |
 | ⚡ **Zero Setup** | One command to install, auto-configures AI rules |
 
 ---
@@ -152,6 +152,7 @@ Agent Journal works with **any AI coding assistant** that can write Markdown:
 | Agent | Status |
 |-------|--------|
 | ✨ Claude Code | ✅ Fully compatible |
+| 🅲 Cline | ✅ Fully compatible (native Rules + Skills) |
 | 🚀 Antigravity (Google) | ✅ Fully compatible |
 | 🔮 Cursor | ✅ Fully compatible |
 | 🏄 Windsurf | ✅ Fully compatible |
@@ -175,6 +176,15 @@ Add to your global skills so every project gets journaling:
   "path": "./Agent-Journal.md"
 }
 ```
+
+### Cline (Native Rules + Skills)
+
+Cline gets first-class support:
+
+- **Rule** — `.clinerules/agent-journal.md` (always active; toggle in Cline's Rules panel)
+- **Skill** — `.cline/skills/agent-journal/SKILL.md` (on-demand; run `/agent-journal` in chat to force it)
+- **Global install** also writes `~/.cline/rules/agent-journal.md`
+- Cline auto-detects `.cursorrules`, `.windsurfrules`, and a root-level `AGENTS.md` too
 
 ### Manual Installation
 

@@ -10,7 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "3.0.0"
+$Version = "3.1.0"
 $SkillsDir = $PSScriptRoot
 
 Write-Host ""
@@ -176,6 +176,18 @@ if ((Test-Path $mapSource) -and (-not (Test-Path $mapDest) -or $Force)) {
     Write-Host "  [+] Copied agent-map.py" -ForegroundColor Green
 }
 
+# Copy Cline skill template (.cline/skills/agent-journal/SKILL.md)
+$clineSkillSource = Join-Path $SkillsDir "cline-skill.md"
+$clineSkillDir = Join-Path $ProjectPath ".cline\skills\agent-journal"
+$clineSkillDest = Join-Path $clineSkillDir "SKILL.md"
+if ((Test-Path $clineSkillSource) -and (-not (Test-Path $clineSkillDest) -or $Force)) {
+    if (-not (Test-Path $clineSkillDir)) {
+        New-Item -ItemType Directory -Path $clineSkillDir -Force | Out-Null
+    }
+    Copy-Item $clineSkillSource $clineSkillDest -Force
+    Write-Host "  [+] Installed Cline skill (.cline/skills/agent-journal/SKILL.md)" -ForegroundColor Green
+}
+
 # Generate project map
 if (-not $SkipMap -and -not $Global) {
     Write-Host "  [*] Generating project map..." -ForegroundColor Gray
@@ -203,6 +215,17 @@ if (-not $Global) {
 - Read ``.agents/PROJECT_MAP.md`` and ``.agents/pipeline.md`` (if they exist) before starting.
 - Do not ask for permission to journal, just do it automatically.
 "@
+
+    # Cline - .clinerules/agent-journal.md (always-active workspace rule)
+    $clineRulesDir = Join-Path $ProjectPath ".clinerules"
+    if (-not (Test-Path $clineRulesDir)) {
+        New-Item -ItemType Directory -Path $clineRulesDir -Force | Out-Null
+    }
+    $clineRulesPath = Join-Path $clineRulesDir "agent-journal.md"
+    if (-not (Test-Path $clineRulesPath) -or -not (Select-String -Path $clineRulesPath -Pattern "Agent Journal" -Quiet)) {
+        Set-Content $clineRulesPath $ruleBlock -Encoding UTF8
+        Write-Host "  [+] Configured .clinerules/agent-journal.md (Cline rule)" -ForegroundColor Green
+    }
 
     # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
     $claudeMd = Join-Path $ProjectPath "CLAUDE.md"
@@ -298,6 +321,7 @@ Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
 Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
 Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -ForegroundColor Gray
+Write-Host "    - Cline          (.clinerules/ + .cline/skills/)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Your AI agent will now automatically:" -ForegroundColor White
 Write-Host "    1. Read PROJECT_MAP.md before working" -ForegroundColor Gray
