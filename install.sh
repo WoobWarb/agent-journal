@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="2.2.0"
+VERSION="3.4.0"
 REPO_URL="https://raw.githubusercontent.com/WoobWarb/agent-journal/main"
 SKILL_FILE="Agent-Journal.md"
 GLOBAL=false
@@ -182,6 +182,28 @@ EOF
     echo "  [+] Created pipeline.md"
 fi
 
+# Create or download fail_log.md (Failure & Anti-Pattern Memory)
+FAIL_LOG_PATH="$DEST_DIR/fail_log.md"
+if [ ! -f "$FAIL_LOG_PATH" ]; then
+    if command -v curl &> /dev/null && curl -fsSL "$REPO_URL/fail_log.md" -o "$FAIL_LOG_PATH" 2>/dev/null; then
+        echo "  [+] Installed fail_log.md (Failure Memory)"
+    elif command -v wget &> /dev/null && wget -q "$REPO_URL/fail_log.md" -O "$FAIL_LOG_PATH" 2>/dev/null; then
+        echo "  [+] Installed fail_log.md (Failure Memory)"
+    else
+        cat > "$FAIL_LOG_PATH" << 'EOF'
+# ⚠️ Agent Fail Log & Anti-Patterns
+
+> **Read this file BEFORE planning or coding to avoid repeating past mistakes.**
+> Whenever an approach fails (❌), hits a dead-end, or takes more than 2 attempts to fix, record the root cause and the "Do Not Repeat" rule here.
+
+---
+EOF
+        echo "  [+] Created fail_log.md (Failure Memory)"
+    fi
+else
+    echo "  [=] fail_log.md already exists (preserved)"
+fi
+
 # Download Cline skill template (SKILL.md)
 if [ "$GLOBAL" = true ]; then
     CLINE_SKILL_DIR="$HOME/.cline/skills/agent-journal"
@@ -197,6 +219,16 @@ elif command -v wget &> /dev/null; then
     wget -q "$REPO_URL/cline-skill.md" -O "$CLINE_SKILL_DIR/SKILL.md" && echo "  [+] Successfully installed SKILL.md (Cline skill)" || echo "  [!] Could not download Cline skill (non-fatal)."
 else
     echo "  [!] Could not download Cline skill (non-fatal)."
+fi
+
+# Install Hermes Agent skill (~/.hermes/skills/agent-journal/SKILL.md & .skills/agent-journal/SKILL.md)
+if [ "$GLOBAL" = true ] || [ -d "$HOME/.hermes" ]; then
+    mkdir -p "$HOME/.hermes/skills/agent-journal"
+    cp "$AGENTS_MD_PATH" "$HOME/.hermes/skills/agent-journal/SKILL.md" 2>/dev/null && echo "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" || true
+fi
+if [ "$GLOBAL" = false ]; then
+    mkdir -p "$(pwd)/.skills/agent-journal"
+    cp "$AGENTS_MD_PATH" "$(pwd)/.skills/agent-journal/SKILL.md" 2>/dev/null && echo "  [+] Installed local skill (.skills/agent-journal/SKILL.md)" || true
 fi
 
 # Download and run Agent Map (only for local installs)
@@ -228,7 +260,7 @@ if [ -f ".gitignore" ]; then
 fi
 
 # Configure AI Auto-Journaling (all platforms)
-RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.\n- Do not ask for permission to journal, just do it automatically.\n"
+RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Do not ask for permission to journal, just do it automatically.\n"
 
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling for all platforms..."
@@ -294,11 +326,13 @@ echo "    - Cursor         (.cursorrules)"
 echo "    - Windsurf       (.windsurfrules)"
 echo "    - GitHub Copilot (.github/copilot-instructions.md)"
 echo "    - Antigravity    (.antigravity/extensions.json)"
+echo "    - Hermes Agent   (~/.hermes/skills/agent-journal/ + .skills/agent-journal/)"
 if [ "$GLOBAL" = true ]; then
     echo "    - Cline          (global: ~/.cline/rules/ + ~/.cline/skills/)"
 else
     echo "    - Cline          (.clinerules/ + .cline/skills/)"
 fi
+echo "  ⚠️ Failure Memory enabled (.agents/fail_log.md)."
 echo "  🌐 HTML Companion enabled. Agent will generate Agent-Journal.html after each session."
 echo ""
 echo "  📊 Open .agents/Agent-Journal.html in any browser to view your journal dashboard"

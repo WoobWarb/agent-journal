@@ -10,7 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "3.1.0"
+$Version = "3.4.0"
 $SkillsDir = $PSScriptRoot
 
 Write-Host ""
@@ -142,6 +142,28 @@ if (-not (Test-Path $pipelinePath)) {
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
 }
 
+# Copy or create fail_log.md (Failure & Anti-Pattern Memory)
+$failLogSource = Join-Path $SkillsDir "fail_log.md"
+$failLogDest = Join-Path $agentsDir "fail_log.md"
+if (-not (Test-Path $failLogDest)) {
+    if (Test-Path $failLogSource) {
+        Copy-Item $failLogSource $failLogDest -Force
+    } else {
+        $failLogContent = @"
+# ⚠️ Agent Fail Log & Anti-Patterns
+
+> **Read this file BEFORE planning or coding to avoid repeating past mistakes.**
+> Whenever an approach fails (❌), hits a dead-end, or takes more than 2 attempts to fix, record the root cause and the "Do Not Repeat" rule here.
+
+---
+"@
+        Set-Content $failLogDest $failLogContent -Encoding UTF8
+    }
+    Write-Host "  [+] Created fail_log.md (Failure Memory)" -ForegroundColor Green
+} else {
+    Write-Host "  [=] fail_log.md already exists (preserved)" -ForegroundColor DarkGray
+}
+
 # Create active.md
 $activePath = Join-Path $agentsDir "active.md"
 $activeContent = @"
@@ -188,6 +210,26 @@ if ((Test-Path $clineSkillSource) -and (-not (Test-Path $clineSkillDest) -or $Fo
     Write-Host "  [+] Installed Cline skill (.cline/skills/agent-journal/SKILL.md)" -ForegroundColor Green
 }
 
+# Copy Hermes skill template (~/.hermes/skills/agent-journal/SKILL.md & .skills/agent-journal/SKILL.md)
+if ($Global -or (Test-Path (Join-Path $env:USERPROFILE ".hermes"))) {
+    $hermesSkillDir = Join-Path $env:USERPROFILE ".hermes\skills\agent-journal"
+    if (-not (Test-Path $hermesSkillDir)) {
+        New-Item -ItemType Directory -Path $hermesSkillDir -Force | Out-Null
+    }
+    if (Test-Path $skillSource) {
+        Copy-Item $skillSource (Join-Path $hermesSkillDir "SKILL.md") -Force
+        Write-Host "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" -ForegroundColor Green
+    }
+}
+if (-not $Global -and (Test-Path $skillSource)) {
+    $localSkillDir = Join-Path $ProjectPath ".skills\agent-journal"
+    if (-not (Test-Path $localSkillDir)) {
+        New-Item -ItemType Directory -Path $localSkillDir -Force | Out-Null
+    }
+    Copy-Item $skillSource (Join-Path $localSkillDir "SKILL.md") -Force
+    Write-Host "  [+] Installed local skill (.skills/agent-journal/SKILL.md)" -ForegroundColor Green
+}
+
 # Generate project map
 if (-not $SkipMap -and -not $Global) {
     Write-Host "  [*] Generating project map..." -ForegroundColor Gray
@@ -209,10 +251,11 @@ if (-not $Global) {
 
 # Agent Journal Rules
 - Read and follow ``.agents/AGENTS.md`` for journaling and context rules.
+- CONTEXT & FAIL LOG: Read ``.agents/PROJECT_MAP.md``, ``.agents/pipeline.md``, and ``.agents/fail_log.md`` (if they exist) BEFORE planning or writing code so you never repeat past failures.
 - PRE-JOURNALING: ALWAYS write an initial entry in ``.agents/Agent-Journal.md`` BEFORE making any code changes. Set status to ``In Progress``.
 - EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.
+- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in ``.agents/fail_log.md``.
 - COMPLETION: Once work is complete, update the entry status to ``Complete`` and generate ``.agents/Agent-Journal.html`` from the markdown.
-- Read ``.agents/PROJECT_MAP.md`` and ``.agents/pipeline.md`` (if they exist) before starting.
 - Do not ask for permission to journal, just do it automatically.
 "@
 
@@ -293,17 +336,18 @@ if (-not $Global) {
     $antiGravSkillMdContent = @"
 ---
 name: agent-journal
-description: Core system skill for logging and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md). You MUST read this skill before writing any code or modifying the project.
+description: Core system skill for logging, failure memory, and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md) and Fail Log (.agents/fail_log.md). You MUST read this skill before writing any code or modifying the project.
 ---
 
 # Agent Journal Skill
 You must strictly follow these rules automatically for every task in this project.
-1. Read `.agents/PROJECT_MAP.md` if it exists.
+1. Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
 2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding.
 3. Log step-by-step Execution Log BEFORE each action.
-4. Update to `Complete` when done.
-5. Generate `Agent-Journal.html` after modifying the journal.
-6. Update `.agents/active.md`.
+4. Whenever an action fails (❌) or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
+5. Update to `Complete` when done.
+6. Generate `Agent-Journal.html` after modifying the journal.
+7. Update `.agents/active.md`.
 "@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
@@ -322,11 +366,13 @@ Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
 Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -ForegroundColor Gray
 Write-Host "    - Cline          (.clinerules/ + .cline/skills/)" -ForegroundColor Gray
+Write-Host "    - Hermes Agent   (~/.hermes/skills/agent-journal/ + .skills/agent-journal/)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Your AI agent will now automatically:" -ForegroundColor White
-Write-Host "    1. Read PROJECT_MAP.md before working" -ForegroundColor Gray
+Write-Host "    1. Read PROJECT_MAP.md & fail_log.md before working" -ForegroundColor Gray
 Write-Host "    2. Write journal entries before/after changes" -ForegroundColor Gray
-Write-Host "    3. Update active.md for session resume" -ForegroundColor Gray
+Write-Host "    3. Log failed approaches into fail_log.md so mistakes are never repeated" -ForegroundColor Gray
+Write-Host "    4. Update active.md for session resume" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  To regenerate the project map:" -ForegroundColor DarkGray
 Write-Host "    python agent-map.py" -ForegroundColor DarkGray

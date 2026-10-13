@@ -1,17 +1,18 @@
 ---
 name: agent-journal
-description: Human-readable project journal for AI agent work. Use for any coding task in this project to pre-journal the plan, log each execution step before doing it, and generate the HTML journal companion. Also use to resume interrupted work from the journal, regenerate Agent-Journal.html, or update the project map.
+description: Human-readable project journal and failure memory for AI agent work. Use for any coding task in this project to read fail_log.md, pre-journal the plan, log each execution step before doing it, log failures in fail_log.md, and generate the HTML journal companion.
 ---
 
 # Agent Journal
 
-The human-readable diary of AI agent work on this project. The source of truth is `.agents/Agent-Journal.md`.
+The human-readable diary of AI agent work on this project. The source of truth is `.agents/Agent-Journal.md`, and known pitfalls live in `.agents/fail_log.md`.
 
 ## Protocol
 
 ### 0. Context First
 - If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
 - If `.agents/pipeline.md` exists, read it before running any build/test/lint/deploy command.
+- If `.agents/fail_log.md` exists, read it BEFORE planning or coding so you never repeat a previously failed approach.
 - If `.agents/AGENTS.md` exists, follow it — it contains the full journaling protocol.
 
 ### 1. Pre-Journaling (BEFORE coding)
@@ -49,20 +50,31 @@ Entry template:
 ### 2. Execution Log (DURING coding)
 Before EACH action, log it in the entry under `### 🔨 Execution Log`. Update the icon AFTER the action.
 
-- 🔲 Planned | ⏳ In progress | ✅ Done | ❌ Failed (add reason)
+- 🔲 Planned | ⏳ In progress | ✅ Done | ❌ Failed (add reason + log in `.agents/fail_log.md`)
 
 This makes interrupted sessions recoverable: the next agent reads the log and resumes exactly where you stopped.
 
-### 3. Completion (AFTER coding)
+### 3. Failure Logging (ON ANY FAILURE)
+Whenever a step fails (`❌`), a command/approach hits a dead-end, or fixing an error takes more than 2 attempts, append an entry to `.agents/fail_log.md`:
+
+```markdown
+## [YYYY-MM-DD] | Short title of failure or anti-pattern
+- **Context / File:** `path/to/file`
+- **What Failed:** Brief description of what failed
+- **Root Cause:** Why it failed
+- **Rule / Do Not Repeat:** ❌ Never do X; ✅ Always do Y instead.
+```
+
+### 4. Completion (AFTER coding)
 - Set status to ✅ Complete, ⚠️ Partial, or ❌ Failed
 - Check off completed planned actions
 - Fill in `### 📂 Files Changed`, `### ⚠️ Risks & Blockers`, and `### 💡 Notes` as needed
 - Bump the header's `Last Updated` date and `Sessions` counter
 
-### 4. HTML Companion
+### 5. HTML Companion
 After every journal update, regenerate `.agents/Agent-Journal.html` (structure defined in `.agents/AGENTS.md`): read the markdown, escape backticks, and paste it into `window.JOURNAL_DATA`.
 
-### 5. Handoff Note (when interrupted or switching AI)
+### 6. Handoff Note (when interrupted or switching AI)
 Append to the current entry:
 
 ```markdown
@@ -91,6 +103,7 @@ For trivial changes:
 | Request | Action |
 |---------|--------|
 | "resume" / "continue" | Read `.agents/Agent-Journal.md` (and `.agents/active.md` if present), find the last entry with ⏳ or 🔲 steps, and continue from the Handoff Note |
+| "log fail" | Record a failed approach and "Do Not Repeat" rule in `.agents/fail_log.md` |
 | "generate html" | Regenerate `.agents/Agent-Journal.html` from the current markdown |
 | "update map" | Run `python agent-map.py` to regenerate `.agents/PROJECT_MAP.md` |
 | "show active" | Show the current task context from `.agents/active.md` |

@@ -1,7 +1,20 @@
-# Universal Agent Skill: Context + Journal + Map
+---
+name: agent-journal
+description: Universal Agent Skill (Context + Journal + Map + Fail Log) — Read PROJECT_MAP.md and fail_log.md, write pre-journal plans and step-by-step execution logs in .agents/Agent-Journal.md, log failures in .agents/fail_log.md, and generate HTML companion before and after modifying files.
+version: 3.4.0
+author: WoobWarb
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [Journal, Context, ProjectMap, FailLog, Workflow, Coding]
+    homepage: https://github.com/WoobWarb/agent-journal
+---
 
-**Version:** 3.3
-**Compatible:** Claude Code, Cline, Antigravity, Cursor, Windsurf, GitHub Copilot, any LLM agent
+# Universal Agent Skill: Context + Journal + Map + Fail Log
+
+**Version:** 3.4
+**Compatible:** Claude Code, Cline, Antigravity, Hermes Agent, Cursor, Windsurf, GitHub Copilot, any LLM agent
 
 ---
 
@@ -9,13 +22,16 @@
 
 When working on this project, follow these rules automatically:
 
-### 1. Read Project Map First
+### 1. Read Project Map, Pipeline & Fail Log First
 
 If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
 This saves tokens and prevents hallucinations about project structure.
 
 If `.agents/pipeline.md` exists, read it before running any build, test, lint, or deploy commands.
 This tells you the exact commands for this project — don't guess or use defaults.
+
+If `.agents/fail_log.md` exists, read it **before planning or writing code**.
+This contains known anti-patterns, dead-end approaches, and past mistakes in this project — never repeat a failed approach listed there.
 
 ### 2. Pre-Journaling (BEFORE coding)
 
@@ -63,21 +79,35 @@ Before making any code changes, write an entry in `.agents/Agent-Journal.md`:
 - 🔲 = Planned (not started)
 - ⏳ = About to do / in progress
 - ✅ = Done
-- ❌ = Failed / skipped (add reason)
+- ❌ = Failed / skipped (add reason + log in `.agents/fail_log.md`)
 
 **When token limit hits or you switch AI, the new agent reads this log and knows:**
 - What is already done (✅)
 - What was in progress (⏳) — may need to verify/complete
 - What remains (🔲) — continue from here
 
-### 4. Completion (AFTER coding)
+### 4. Failure Logging — Anti-Loop Memory (ON ANY FAILURE)
 
-Update the same entry:
+Whenever an action fails (`❌`), a library/command hits a dead-end, or fixing a bug takes more than 2 attempts, **immediately record it in `.agents/fail_log.md`** (create the file if it doesn't exist):
+
+```markdown
+## [YYYY-MM-DD] | Short title of failure or anti-pattern
+- **Context / File:** `src/middleware/auth.ts`
+- **What Failed:** Used `HS256` secret string with `jwt.verify()`
+- **Root Cause:** Auth service signs tokens with `RS256` asymmetric key pair
+- **Rule / Do Not Repeat:** ❌ Never use `HS256` in auth middleware; ✅ Always use `RS256` with `/keys/public.pem`.
+```
+
+**Why this matters:** Prevents you (and future AI sessions) from looping on the same broken solution when context resets.
+
+### 5. Completion (AFTER coding)
+
+Update the same entry in `.agents/Agent-Journal.md`:
 - Change status to `✅ Complete` (or `⚠️ Partial` / `❌ Failed`)
 - Check off completed actions
 - Add any notes or blockers discovered
 
-### 5. Generate HTML Companion (AFTER every journal update)
+### 6. Generate HTML Companion (AFTER every journal update)
 
 **"HTML is the new Markdown"** — After writing or updating `Agent-Journal.md`, generate a companion `Agent-Journal.html` that opens instantly in any browser without needing a file upload.
 
@@ -110,20 +140,21 @@ VIEWER_HTML_PLACEHOLDER
 
 **Why this matters:** Long markdown files don't get read. An HTML dashboard always gets opened.
 
-### 6. Session Context
+### 7. Session Context
 
 Update `.agents/active.md` with current task focus so the next session can resume.
 Include the last completed step number so the next agent knows the exact resume point.
 
-### 7. Technical Decisions
+### 8. Technical Decisions
 
 For significant architectural decisions, add notes to `.agents/topics/[topic].md`.
 
-### 8. Handoff Protocol (when token limit is near or switching AI)
+### 9. Handoff Protocol (when token limit is near or switching AI)
 
 If you sense the conversation is getting long or the user mentions switching:
 1. Update all ⏳ steps to their actual status (✅ or ❌)
-2. Write a `### 🔄 Handoff Note` at the bottom of the current entry:
+2. Log any unresolved ❌ failures into `.agents/fail_log.md`
+3. Write a `### 🔄 Handoff Note` at the bottom of the current entry:
 
 ```markdown
 ### 🔄 Handoff Note
@@ -142,6 +173,7 @@ If you sense the conversation is getting long or the user mentions switching:
 ├── AGENTS.md           # This rules file (universal)
 ├── Agent-Journal.md    # Human-readable work diary (source of truth)
 ├── Agent-Journal.html  # ✨ Auto-generated HTML companion — open in browser
+├── fail_log.md         # ⚠️ Known pitfalls, failed approaches & "Do Not Repeat" rules
 ├── active.md           # Current task context (for AI resume)
 ├── pipeline.md         # Build, test, lint, and deploy commands for this project
 ├── PROJECT_MAP.md      # Auto-generated codebase map
@@ -170,6 +202,13 @@ Rules are auto-added to `.cursorrules` / `.windsurfrules` by the installer.
 - **Native skill** — `.cline/skills/agent-journal/SKILL.md`. Cline activates it automatically when the request matches, or invoke it explicitly with `/agent-journal` in chat.
 - Note: Cline also auto-detects `.cursorrules`, `.windsurfrules`, and a root-level `AGENTS.md`, so journaling rules apply to Cline out of the box even on plain installs.
 - Global installs write the rule to `~/.cline/rules/agent-journal.md`.
+
+### Hermes Agent
+- **Global skill** — `~/.hermes/skills/agent-journal/SKILL.md` (or project `.skills/agent-journal/SKILL.md`).
+- **System Prompt (`~/.hermes/SOUL.md`)** — Add:
+  ```markdown
+  Always follow the protocols defined in `.skills/agent-journal/SKILL.md` before and after modifying files.
+  ```
 
 ### Antigravity
 Register as skill in `.antigravity/extensions.json`:
@@ -268,5 +307,6 @@ Just tell it: "Follow the rules in .agents/AGENTS.md"
 | `@agents show active` | Show current task context |
 | `@agents resume` | Load context and continue work |
 | `@agents update map` | Regenerate PROJECT_MAP.md |
+| `@agents log fail` | Record a failed approach or bug root-cause in `.agents/fail_log.md` |
 | `@agents list sessions` | Show recent session files |
 | `@agents generate html` | Regenerate `Agent-Journal.html` from current `.md` |

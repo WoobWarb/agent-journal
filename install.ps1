@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "2.2.0"
+$Version = "3.4.0"
 
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════╗" -ForegroundColor Cyan
@@ -166,7 +166,29 @@ if (-not (Test-Path $PipelinePath)) {
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
 }
 
-# 4f. Download Cline skill template (SKILL.md)
+# 4f. Create or download fail_log.md (Failure & Anti-Pattern Memory)
+$FailLogPath = Join-Path $DestDir "fail_log.md"
+if (-not (Test-Path $FailLogPath)) {
+    try {
+        Invoke-WebRequest -Uri "$RepoUrl/fail_log.md" -OutFile $FailLogPath -UseBasicParsing
+        Write-Host "  [+] Installed fail_log.md (Failure Memory)" -ForegroundColor Green
+    } catch {
+        $FailLogTemplate = @"
+# ⚠️ Agent Fail Log & Anti-Patterns
+
+> **Read this file BEFORE planning or coding to avoid repeating past mistakes.**
+> Whenever an approach fails (❌), hits a dead-end, or takes more than 2 attempts to fix, record the root cause and the "Do Not Repeat" rule here.
+
+---
+"@
+        Set-Content -Path $FailLogPath -Value $FailLogTemplate -Encoding UTF8
+        Write-Host "  [+] Created fail_log.md (Failure Memory)" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  [=] fail_log.md already exists (preserved)" -ForegroundColor DarkGray
+}
+
+# 4g. Download Cline skill template (SKILL.md)
 if ($Global) {
     $ClineSkillDir = Join-Path $env:USERPROFILE ".cline\skills\agent-journal"
     Write-Host "  [*] Downloading Cline skill (global)..." -ForegroundColor Gray
@@ -183,6 +205,25 @@ try {
     Write-Host "  [+] Successfully installed SKILL.md (Cline skill)" -ForegroundColor Green
 } catch {
     Write-Host "  [!] Could not download Cline skill (non-fatal)." -ForegroundColor Yellow
+}
+
+# 4h. Install Hermes Agent skill (.skills/agent-journal/SKILL.md & ~/.hermes/skills/agent-journal/SKILL.md)
+$HermesGlobalSkillsRoot = Join-Path $env:USERPROFILE ".hermes\skills"
+if ($Global -or (Test-Path (Join-Path $env:USERPROFILE ".hermes"))) {
+    $HermesSkillDir = Join-Path $HermesGlobalSkillsRoot "agent-journal"
+    if (-not (Test-Path $HermesSkillDir)) {
+        New-Item -ItemType Directory -Path $HermesSkillDir -Force | Out-Null
+    }
+    Copy-Item $AgentsMdPath (Join-Path $HermesSkillDir "SKILL.md") -Force -ErrorAction SilentlyContinue
+    Write-Host "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" -ForegroundColor Green
+}
+if (-not $Global) {
+    $LocalSkillDir = Join-Path (Get-Location) ".skills\agent-journal"
+    if (-not (Test-Path $LocalSkillDir)) {
+        New-Item -ItemType Directory -Path $LocalSkillDir -Force | Out-Null
+    }
+    Copy-Item $AgentsMdPath (Join-Path $LocalSkillDir "SKILL.md") -Force -ErrorAction SilentlyContinue
+    Write-Host "  [+] Installed local skill (.skills/agent-journal/SKILL.md)" -ForegroundColor Green
 }
 
 # 5. Download and run Agent Map (only for local installs)
@@ -210,7 +251,7 @@ if (Test-Path $gitignorePath) {
 }
 
 # 7. Configure AI Auto-Journaling (all platforms)
-$RuleText = "`n# Agent Journal Rules`n- Read and follow .agents/AGENTS.md for journaling and context rules.`n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.`n- EXECUTION LOG: Before each action, log it with status icon (🔲 planned, ⏳ in progress, ✅ done, ❌ failed). Write the step BEFORE executing it.`n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.`n- Read .agents/PROJECT_MAP.md and .agents/pipeline.md (if they exist) before starting.`n- Do not ask for permission to journal, just do it automatically.`n"
+$RuleText = "`n# Agent Journal Rules`n- Read and follow .agents/AGENTS.md for journaling and context rules.`n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.`n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.`n- EXECUTION LOG: Before each action, log it with status icon (🔲 planned, ⏳ in progress, ✅ done, ❌ failed). Write the step BEFORE executing it.`n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.`n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.`n- Do not ask for permission to journal, just do it automatically.`n"
 
 if (-not $Global) {
     Write-Host "  [*] Configuring AI Auto-Journaling for all platforms..." -ForegroundColor Gray
@@ -282,17 +323,18 @@ if (-not $Global) {
     $antiGravSkillMdContent = @"
 ---
 name: agent-journal
-description: Core system skill for logging and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md). You MUST read this skill before writing any code or modifying the project.
+description: Core system skill for logging, failure memory, and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md) and Fail Log (.agents/fail_log.md). You MUST read this skill before writing any code or modifying the project.
 ---
 
 # Agent Journal Skill
 You must strictly follow these rules automatically for every task in this project.
-1. Read `.agents/PROJECT_MAP.md` if it exists.
+1. Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
 2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding.
 3. Log step-by-step Execution Log BEFORE each action.
-4. Update to `Complete` when done.
-5. Generate `Agent-Journal.html` after modifying the journal.
-6. Update `.agents/active.md`.
+4. Whenever an action fails (❌) or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
+5. Update to `Complete` when done.
+6. Generate `Agent-Journal.html` after modifying the journal.
+7. Update `.agents/active.md`.
 "@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
@@ -320,6 +362,8 @@ Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray
 Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -ForegroundColor Gray
 Write-Host "    - Cline          (.clinerules\ + .cline\skills\agent-journal\)" -ForegroundColor Gray
+Write-Host "    - Hermes Agent   (~/.hermes/skills/agent-journal\ + .skills/agent-journal\)" -ForegroundColor Gray
+Write-Host "  Failure Memory: .agents/fail_log.md enabled (prevents repeating failed approaches)." -ForegroundColor Green
 Write-Host "  HTML Companion: Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
 Write-Host ""
 Write-Host "  ──────────────────────────────────────" -ForegroundColor DarkGray

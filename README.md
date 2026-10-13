@@ -19,6 +19,7 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 | Feature | Description |
 |---------|-------------|
 | 🧠 **Decision Memory** | Captures *why* decisions were made, not just *what* changed |
+| ⚠️ **Failure Memory (`fail_log.md`)** | Records dead-ends, root causes, and "Do Not Repeat" rules so AI never loops on past mistakes |
 | 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map so AI doesn't get lost |
 | 🛡️ **Pre-Journaling** | AI logs its plan *before* coding to prevent lost context if tokens run out |
 | 🔨 **Step-by-Step Logging** | Logs every action *before* executing — never lose progress when tokens run out |
@@ -26,7 +27,7 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 | 📱 **Truly Portable** | Plain Markdown — read on your phone, Obsidian, VS Code, anywhere |
 | 🎯 **Impact Tracking** | Status badges, impact levels, and risk flags for every session |
 | 📋 **TL;DR Summaries** | Skim 50 sessions in under a minute |
-| 🌐 **Universal Setup** | `setup.ps1` configures Claude Code, Cline, Cursor, Windsurf, and Antigravity at once |
+| 🌐 **Universal Setup** | `setup.ps1` / `install.ps1` configures Claude Code, Cline, Hermes Agent, Cursor, Windsurf, and Antigravity at once |
 | ⚡ **Zero Setup** | One command to install, auto-configures AI rules |
 
 ---
@@ -73,6 +74,24 @@ The **Agent Map** is a "knowledge graph" that gives your AI an instant understan
    ```
 3. It creates `.agents/PROJECT_MAP.md` and `graph.json`.
 4. Your AI is instructed by the Agent Journal to **always read the map first**. This reduces hallucinations and drops token usage significantly.
+
+---
+
+## ⚠️ Failure Memory (`fail_log.md`)
+
+**Stop your AI from repeating the same broken solution.** When context resets or sessions switch, AI agents often try the exact same failed approach again.
+
+`.agents/fail_log.md` acts as a dedicated **Anti-Pattern & Post-Mortem Memory Layer**:
+- **Read before coding:** The AI checks `.agents/fail_log.md` alongside `PROJECT_MAP.md` before planning.
+- **Logged on failure:** Whenever a step fails (`❌`) or takes >2 attempts to fix, the AI records the root cause and a strict `Do Not Repeat` rule:
+
+```markdown
+## [2026-05-16] | JWT verification failed with HS256
+- **Context / File:** `src/middleware/auth.ts`
+- **What Failed:** Used `HS256` secret string with `jwt.verify()`
+- **Root Cause:** Auth service signs tokens with `RS256` asymmetric key pair
+- **Rule / Do Not Repeat:** ❌ Never use `HS256` in auth middleware; ✅ Always use `RS256` with `/keys/public.pem`.
+```
 
 ---
 
@@ -153,6 +172,7 @@ Agent Journal works with **any AI coding assistant** that can write Markdown:
 |-------|--------|
 | ✨ Claude Code | ✅ Fully compatible |
 | 🅲 Cline | ✅ Fully compatible (native Rules + Skills) |
+| 🪽 Hermes Agent | ✅ Fully compatible (Global + Workspace Skill) |
 | 🚀 Antigravity (Google) | ✅ Fully compatible |
 | 🔮 Cursor | ✅ Fully compatible |
 | 🏄 Windsurf | ✅ Fully compatible |
@@ -162,6 +182,19 @@ Agent Journal works with **any AI coding assistant** that can write Markdown:
 ---
 
 ## 🛠️ Advanced Setup
+
+### Hermes Agent (Skill + System Prompt)
+
+1. Install as a Hermes Skill:
+   ```bash
+   mkdir -p ~/.hermes/skills/agent-journal .skills/agent-journal
+   curl -fsSL https://raw.githubusercontent.com/WoobWarb/agent-journal/main/unified-skill.md -o ~/.hermes/skills/agent-journal/SKILL.md
+   cp ~/.hermes/skills/agent-journal/SKILL.md .skills/agent-journal/SKILL.md
+   ```
+2. Bind into `~/.hermes/SOUL.md` (System Prompt):
+   ```markdown
+   Always follow the protocols defined in `.skills/agent-journal/SKILL.md` before and after modifying files.
+   ```
 
 ### Global Skill (Antigravity AI)
 
@@ -188,12 +221,13 @@ Cline gets first-class support:
 
 ### Manual Installation
 
-Just download `Agent-Journal.md` and place it in your project's `.agents/` directory:
+Just download `Agent-Journal.md` and `fail_log.md` and place them in your project's `.agents/` directory:
 
 ```
 your-project/
 ├── .agents/
-│   └── Agent-Journal.md    ← The skill template
+│   ├── Agent-Journal.md    ← The work diary
+│   └── fail_log.md         ← Known pitfalls & anti-patterns
 ├── src/
 └── ...
 ```
