@@ -221,10 +221,23 @@ else
     echo "  [!] Could not download Cline skill (non-fatal)."
 fi
 
-# Install Hermes Agent skill (~/.hermes/skills/agent-journal/SKILL.md & .skills/agent-journal/SKILL.md)
+# Install Hermes Agent skill (~/.hermes/skills/agent-journal/SKILL.md & .skills/agent-journal/SKILL.md) + SOUL.md
 if [ "$GLOBAL" = true ] || [ -d "$HOME/.hermes" ]; then
     mkdir -p "$HOME/.hermes/skills/agent-journal"
     cp "$AGENTS_MD_PATH" "$HOME/.hermes/skills/agent-journal/SKILL.md" 2>/dev/null && echo "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" || true
+    rm -f "$HOME/.hermes/.skills_prompt_snapshot.json" 2>/dev/null || true
+
+    HERMES_SOUL="$HOME/.hermes/SOUL.md"
+    if [ ! -f "$HERMES_SOUL" ] || ! grep -q "agent-journal" "$HERMES_SOUL" 2>/dev/null; then
+        cat >> "$HERMES_SOUL" << 'EOF'
+
+## Agent Journal & Fail Log Protocol
+- Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view("agent-journal")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.
+- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches (`❌`) in `.agents/fail_log.md`.
+EOF
+        echo "  [+] Bound agent-journal into Hermes System Prompt (~/.hermes/SOUL.md)"
+    fi
 fi
 if [ "$GLOBAL" = false ]; then
     mkdir -p "$(pwd)/.skills/agent-journal"

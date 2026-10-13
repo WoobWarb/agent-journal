@@ -207,15 +207,29 @@ try {
     Write-Host "  [!] Could not download Cline skill (non-fatal)." -ForegroundColor Yellow
 }
 
-# 4h. Install Hermes Agent skill (.skills/agent-journal/SKILL.md & ~/.hermes/skills/agent-journal/SKILL.md)
-$HermesGlobalSkillsRoot = Join-Path $env:USERPROFILE ".hermes\skills"
-if ($Global -or (Test-Path (Join-Path $env:USERPROFILE ".hermes"))) {
+# 4h. Install Hermes Agent skill (.skills/agent-journal/SKILL.md & ~/.hermes/skills/agent-journal/SKILL.md) + SOUL.md
+$HermesHome = Join-Path $env:USERPROFILE ".hermes"
+$HermesGlobalSkillsRoot = Join-Path $HermesHome "skills"
+if ($Global -or (Test-Path $HermesHome)) {
     $HermesSkillDir = Join-Path $HermesGlobalSkillsRoot "agent-journal"
     if (-not (Test-Path $HermesSkillDir)) {
         New-Item -ItemType Directory -Path $HermesSkillDir -Force | Out-Null
     }
     Copy-Item $AgentsMdPath (Join-Path $HermesSkillDir "SKILL.md") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $HermesHome ".skills_prompt_snapshot.json") -Force -ErrorAction SilentlyContinue
     Write-Host "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" -ForegroundColor Green
+
+    $HermesSoulPath = Join-Path $HermesHome "SOUL.md"
+    $HermesSoulRule = "`n## Agent Journal & Fail Log Protocol`n- Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view(`"agent-journal`")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.`n- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.`n- Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches (`❌`) in `.agents/fail_log.md`.`n"
+    if (Test-Path $HermesSoulPath) {
+        if (-not ((Get-Content $HermesSoulPath -Raw -ErrorAction SilentlyContinue) -match "agent-journal")) {
+            Add-Content -Path $HermesSoulPath -Value $HermesSoulRule -Encoding UTF8
+            Write-Host "  [+] Bound agent-journal into Hermes System Prompt (~/.hermes/SOUL.md)" -ForegroundColor Green
+        }
+    } else {
+        Set-Content -Path $HermesSoulPath -Value $HermesSoulRule.TrimStart() -Encoding UTF8
+        Write-Host "  [+] Created ~/.hermes/SOUL.md with Agent Journal protocol" -ForegroundColor Green
+    }
 }
 if (-not $Global) {
     $LocalSkillDir = Join-Path (Get-Location) ".skills\agent-journal"
