@@ -1,5 +1,5 @@
 # Agent Journal Remote Installer
-# 📓 "The human-readable diary of your AI agent's work."
+# "The human-readable diary of your AI agent's work."
 
 param(
     [switch]$Global,
@@ -10,9 +10,9 @@ $ErrorActionPreference = "Stop"
 $Version = "3.4.0"
 
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "  ║     Agent Journal Installer v$Version    ║" -ForegroundColor Cyan
-Write-Host "  ╚══════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "  +======================================+" -ForegroundColor Cyan
+Write-Host "  |     Agent Journal Installer v$Version   |" -ForegroundColor Cyan
+Write-Host "  +======================================+" -ForegroundColor Cyan
 Write-Host ""
 
 # 1. Configuration
@@ -43,7 +43,7 @@ if (Test-Path $DestPath) {
     Write-Host ""
     Write-Host "  [!] Agent-Journal.md already exists!" -ForegroundColor Yellow
     
-    $content = Get-Content $DestPath -Raw
+    $content = Get-Content $DestPath -Raw -Encoding UTF8
     if ($content -match "(?s)(---\s*\r?\n\s*##\s*\[.*)") {
         $ExistingSessions = $Matches[1]
         Write-Host "  [i] Found existing session logs. They will be preserved and merged." -ForegroundColor Gray
@@ -65,7 +65,7 @@ Write-Host "  [*] Downloading template from GitHub..." -ForegroundColor Gray
 try {
     $TempPath = [System.IO.Path]::GetTempFileName()
     Invoke-WebRequest -Uri "$RepoUrl/$SkillFile" -OutFile $TempPath -UseBasicParsing
-    $NewTemplate = Get-Content $TempPath -Raw
+    $NewTemplate = Get-Content $TempPath -Raw -Encoding UTF8
     Remove-Item $TempPath
     
     if ($ExistingSessions) {
@@ -112,7 +112,7 @@ if (-not (Test-Path $HtmlJournalPath)) {
 # 4e. Create pipeline.md template
 $PipelinePath = Join-Path $DestDir "pipeline.md"
 if (-not (Test-Path $PipelinePath)) {
-    $PipelineContent = @"
+    $PipelineContent = @'
 # Pipeline
 
 > Fill this in so your AI knows exactly how to build, test, and deploy this project.
@@ -120,39 +120,39 @@ if (-not (Test-Path $PipelinePath)) {
 
 ## Install
 
-``````
+```
 # e.g. npm install / pip install -r requirements.txt / go mod tidy
-``````
+```
 
 ## Build
 
-``````
+```
 # e.g. npm run build / go build ./... / python setup.py build
-``````
+```
 
 ## Test
 
-``````
+```
 # e.g. npm test / pytest / go test ./...
-``````
+```
 
 ## Lint / Format
 
-``````
+```
 # e.g. npm run lint / ruff check . / golangci-lint run
-``````
+```
 
 ## Run (dev)
 
-``````
+```
 # e.g. npm run dev / uvicorn main:app --reload / go run main.go
-``````
+```
 
 ## Deploy
 
-``````
+```
 # e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
-``````
+```
 
 ## CI/CD
 
@@ -161,7 +161,7 @@ if (-not (Test-Path $PipelinePath)) {
 
 ## Notes
 
-"@
+'@
     Set-Content -Path $PipelinePath -Value $PipelineContent -Encoding UTF8
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
 }
@@ -173,14 +173,14 @@ if (-not (Test-Path $FailLogPath)) {
         Invoke-WebRequest -Uri "$RepoUrl/fail_log.md" -OutFile $FailLogPath -UseBasicParsing
         Write-Host "  [+] Installed fail_log.md (Failure Memory)" -ForegroundColor Green
     } catch {
-        $FailLogTemplate = @"
-# ⚠️ Agent Fail Log & Anti-Patterns
+        $FailLogTemplate = @'
+# Agent Fail Log & Anti-Patterns
 
 > **Read this file BEFORE planning or coding to avoid repeating past mistakes.**
-> Whenever an approach fails (❌), hits a dead-end, or takes more than 2 attempts to fix, record the root cause and the "Do Not Repeat" rule here.
+> Whenever an approach fails, hits a dead-end, or takes more than 2 attempts to fix, record the root cause and the "Do Not Repeat" rule here.
 
 ---
-"@
+'@
         Set-Content -Path $FailLogPath -Value $FailLogTemplate -Encoding UTF8
         Write-Host "  [+] Created fail_log.md (Failure Memory)" -ForegroundColor Green
     }
@@ -220,9 +220,15 @@ if ($Global -or (Test-Path $HermesHome)) {
     Write-Host "  [+] Installed Hermes global skill (~/.hermes/skills/agent-journal/SKILL.md)" -ForegroundColor Green
 
     $HermesSoulPath = Join-Path $HermesHome "SOUL.md"
-    $HermesSoulRule = "`n## Agent Journal & Fail Log Protocol`n- Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view(`"agent-journal`")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.`n- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.`n- Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches (`❌`) in `.agents/fail_log.md`.`n"
+    $HermesSoulRule = @'
+
+## Agent Journal & Fail Log Protocol
+- Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view("agent-journal")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.
+- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches in `.agents/fail_log.md`.
+'@
     if (Test-Path $HermesSoulPath) {
-        if (-not ((Get-Content $HermesSoulPath -Raw -ErrorAction SilentlyContinue) -match "agent-journal")) {
+        if (-not ((Get-Content $HermesSoulPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "agent-journal")) {
             Add-Content -Path $HermesSoulPath -Value $HermesSoulRule -Encoding UTF8
             Write-Host "  [+] Bound agent-journal into Hermes System Prompt (~/.hermes/SOUL.md)" -ForegroundColor Green
         }
@@ -257,15 +263,25 @@ if (-not $Global) {
 # 6. Add to .gitignore if not already there
 $gitignorePath = Join-Path (Get-Location) ".gitignore"
 if (Test-Path $gitignorePath) {
-    $content = Get-Content $gitignorePath -Raw
+    $content = Get-Content $gitignorePath -Raw -Encoding UTF8
     if ($content -notmatch "\.agents/") {
-        Add-Content $gitignorePath "`n# Agent Journal`n.agents/"
+        Add-Content $gitignorePath "`n# Agent Journal`n.agents/" -Encoding UTF8
         Write-Host "  [+] Added .agents/ to .gitignore" -ForegroundColor Green
     }
 }
 
 # 7. Configure AI Auto-Journaling (all platforms)
-$RuleText = "`n# Agent Journal Rules`n- Read and follow .agents/AGENTS.md for journaling and context rules.`n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.`n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.`n- EXECUTION LOG: Before each action, log it with status icon (🔲 planned, ⏳ in progress, ✅ done, ❌ failed). Write the step BEFORE executing it.`n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.`n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.`n- Do not ask for permission to journal, just do it automatically.`n"
+$RuleText = @'
+
+# Agent Journal Rules
+- Read and follow .agents/AGENTS.md for journaling and context rules.
+- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.
+- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.
+- EXECUTION LOG: Before each action, log it with status icon (planned, in progress, done, failed). Write the step BEFORE executing it.
+- FAILURE LOGGING: Whenever a step fails or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.
+- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.
+- Do not ask for permission to journal, just do it automatically.
+'@
 
 if (-not $Global) {
     Write-Host "  [*] Configuring AI Auto-Journaling for all platforms..." -ForegroundColor Gray
@@ -276,22 +292,22 @@ if (-not $Global) {
         New-Item -ItemType Directory -Path $ClineRulesDir -Force | Out-Null
     }
     $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
-    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
         Set-Content $ClineRulePath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured .clinerules/agent-journal.md (Cline rule)" -ForegroundColor Green
     }
 
     # Cursor
     $cursorPath = Join-Path (Get-Location) ".cursorrules"
-    if (-not (Test-Path $cursorPath) -or -not ((Get-Content $cursorPath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
-        Add-Content $cursorPath $RuleText
+    if (-not (Test-Path $cursorPath) -or -not ((Get-Content $cursorPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+        Add-Content $cursorPath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured .cursorrules" -ForegroundColor Green
     }
 
     # Windsurf
     $windsurfPath = Join-Path (Get-Location) ".windsurfrules"
-    if (-not (Test-Path $windsurfPath) -or -not ((Get-Content $windsurfPath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
-        Add-Content $windsurfPath $RuleText
+    if (-not (Test-Path $windsurfPath) -or -not ((Get-Content $windsurfPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+        Add-Content $windsurfPath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured .windsurfrules" -ForegroundColor Green
     }
 
@@ -300,8 +316,8 @@ if (-not $Global) {
     if (-not (Test-Path $claudeMd)) {
         Set-Content $claudeMd "# Project Rules`n`n@.agents/AGENTS.md`n" -Encoding UTF8
         Write-Host "  [+] Created CLAUDE.md" -ForegroundColor Green
-    } elseif (-not ((Get-Content $claudeMd -Raw) -match "AGENTS\.md")) {
-        Add-Content $claudeMd "`n@.agents/AGENTS.md`n"
+    } elseif (-not ((Get-Content $claudeMd -Raw -Encoding UTF8) -match "AGENTS\.md")) {
+        Add-Content $claudeMd "`n@.agents/AGENTS.md`n" -Encoding UTF8
         Write-Host "  [+] Updated CLAUDE.md with journal import" -ForegroundColor Green
     }
 
@@ -311,8 +327,8 @@ if (-not $Global) {
         New-Item -ItemType Directory -Path $githubDir -Force | Out-Null
     }
     $copilotPath = Join-Path $githubDir "copilot-instructions.md"
-    if (-not (Test-Path $copilotPath) -or -not ((Get-Content $copilotPath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
-        Add-Content $copilotPath $RuleText
+    if (-not (Test-Path $copilotPath) -or -not ((Get-Content $copilotPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+        Add-Content $copilotPath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured .github/copilot-instructions.md" -ForegroundColor Green
     }
 
@@ -334,7 +350,7 @@ if (-not $Global) {
         New-Item -ItemType Directory -Path $antiGravPluginDir -Force | Out-Null
     }
     $antiGravSkillMdPath = Join-Path $antiGravPluginDir "SKILL.md"
-    $antiGravSkillMdContent = @"
+    $antiGravSkillMdContent = @'
 ---
 name: agent-journal
 description: Core system skill for logging, failure memory, and journaling. Use this skill at the beginning of EVERY conversation or task to maintain the project's Agent Journal (.agents/Agent-Journal.md) and Fail Log (.agents/fail_log.md). You MUST read this skill before writing any code or modifying the project.
@@ -345,11 +361,11 @@ You must strictly follow these rules automatically for every task in this projec
 1. Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
 2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding.
 3. Log step-by-step Execution Log BEFORE each action.
-4. Whenever an action fails (❌) or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
+4. Whenever an action fails or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
 5. Update to `Complete` when done.
 6. Generate `Agent-Journal.html` after modifying the journal.
 7. Update `.agents/active.md`.
-"@
+'@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
 } else {
@@ -359,7 +375,7 @@ You must strictly follow these rules automatically for every task in this projec
         New-Item -ItemType Directory -Path $ClineRulesDir -Force | Out-Null
     }
     $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
-    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -ErrorAction SilentlyContinue) -match "Agent Journal")) {
+    if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
         Set-Content $ClineRulePath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured Cline global rule (~\.cline\rules\agent-journal.md)" -ForegroundColor Green
     }
@@ -380,7 +396,7 @@ Write-Host "    - Hermes Agent   (~/.hermes/skills/agent-journal\ + .skills/agen
 Write-Host "  Failure Memory: .agents/fail_log.md enabled (prevents repeating failed approaches)." -ForegroundColor Green
 Write-Host "  HTML Companion: Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
 Write-Host ""
-Write-Host "  ──────────────────────────────────────" -ForegroundColor DarkGray
+Write-Host "  --------------------------------------" -ForegroundColor DarkGray
 Write-Host "  Options:  install.ps1 -Global  (install to ~\.agents\)" -ForegroundColor DarkGray
 Write-Host "            install.ps1 -Force   (overwrite without asking)" -ForegroundColor DarkGray
 Write-Host ""
