@@ -40,6 +40,12 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 | iex
 ```
 
+### Windows (Command Prompt / cmd.exe)
+
+```cmd
+powershell -Command "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1))) -Global -Force"
+```
+
 ### macOS / Linux (Bash)
 
 ```bash
@@ -52,10 +58,13 @@ Then tell your AI agent:
 
 ### Installer Options
 
-| Flag | PowerShell | Bash | Description |
-|------|-----------|------|-------------|
-| Global install | `-Global` | `--global` | Install to `~/.agents/` instead of project |
-| Force overwrite | `-Force` | `--force` | Overwrite existing file without asking |
+| Target / Shell | Command | Description |
+|----------------|---------|-------------|
+| **PowerShell (Local)** | `iwr -useb https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1 \| iex` | Install to current project (`.agents/`) |
+| **PowerShell (Global)** | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1))) -Global` | Install globally to `~/.agents/` & Hermes |
+| **Command Prompt (Global)** | `powershell -Command "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.ps1))) -Global -Force"` | Run from `cmd.exe` directly |
+| **Bash (Local)** | `curl -fsSL https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.sh \| bash` | Install to current project (`.agents/`) |
+| **Bash (Global)** | `curl -fsSL https://raw.githubusercontent.com/WoobWarb/agent-journal/main/install.sh \| bash -s -- --global` | Install globally to `~/.agents/` & Hermes |
 
 ---
 
