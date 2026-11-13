@@ -204,6 +204,29 @@ else
     echo "  [=] fail_log.md already exists (preserved)"
 fi
 
+# Create active.md template (read first by every new session)
+ACTIVE_PATH="$DEST_DIR/active.md"
+if [ ! -f "$ACTIVE_PATH" ]; then
+    cat > "$ACTIVE_PATH" << 'EOF'
+# Active Context
+**Updated:** YYYY-MM-DD | **Agent:** (agent name + model)
+
+## Current Status
+Not started yet.
+
+## Deliverables
+| Deliverable | Status | Notes |
+|-------------|--------|-------|
+|             |        |       |
+
+## Handoff
+- **Did:**
+- **Found:**
+- **Next:**
+EOF
+    echo "  [+] Created active.md"
+fi
+
 # Download Cline skill template (SKILL.md)
 if [ "$GLOBAL" = true ]; then
     CLINE_SKILL_DIR="$HOME/.cline/skills/agent-journal"
@@ -273,7 +296,7 @@ if [ -f ".gitignore" ]; then
 fi
 
 # Configure AI Auto-Journaling (all platforms)
-RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Do not ask for permission to journal, just do it automatically.\n"
+RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- START: Read .agents/active.md before doing anything else in a new chat.\n- AFTER EVERY TASK: Update .agents/active.md (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.\n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Do not ask for permission to journal, just do it automatically.\n"
 
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling for all platforms..."
@@ -297,13 +320,23 @@ if [ "$GLOBAL" = false ]; then
         echo "  [+] Configured .windsurfrules"
     fi
 
-    # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
+    # Root AGENTS.md - thin pointer read by Codex, Cline, Cursor, Copilot, etc. (append, never overwrite)
+    ROOT_AGENTS_TEXT='# Agent Journal\n\nBefore any task, read `.agents/active.md`, then follow the rules in `.agents/AGENTS.md`.\n\n@.agents/AGENTS.md\n'
+    if [ ! -f "AGENTS.md" ]; then
+        printf "%b" "$ROOT_AGENTS_TEXT" > "AGENTS.md"
+        echo "  [+] Created AGENTS.md"
+    elif ! grep -q "\.agents/AGENTS\.md" "AGENTS.md"; then
+        printf "\n%b" "$ROOT_AGENTS_TEXT" >> "AGENTS.md"
+        echo "  [+] Updated AGENTS.md with journal pointer"
+    fi
+
+    # Claude Code - CLAUDE.md imports root AGENTS.md so every agent shares one rule set
     if [ ! -f "CLAUDE.md" ]; then
-        printf "# Project Rules\n\n@.agents/AGENTS.md\n" > "CLAUDE.md"
+        printf "@AGENTS.md\n" > "CLAUDE.md"
         echo "  [+] Created CLAUDE.md"
     elif ! grep -q "AGENTS\.md" "CLAUDE.md"; then
-        printf "\n@.agents/AGENTS.md\n" >> "CLAUDE.md"
-        echo "  [+] Updated CLAUDE.md with journal import"
+        printf "\n@AGENTS.md\n" >> "CLAUDE.md"
+        echo "  [+] Updated CLAUDE.md with AGENTS.md import"
     fi
 
     # GitHub Copilot - .github/copilot-instructions.md
@@ -334,7 +367,8 @@ echo ""
 echo "  ✅ Ready to start journaling!"
 echo ""
 echo "  ✨ Auto-Journaling configured for:"
-echo "    - Claude Code    (CLAUDE.md)"
+echo "    - Claude Code    (CLAUDE.md -> @AGENTS.md)"
+echo "    - Codex & others (AGENTS.md)"
 echo "    - Cursor         (.cursorrules)"
 echo "    - Windsurf       (.windsurfrules)"
 echo "    - GitHub Copilot (.github/copilot-instructions.md)"

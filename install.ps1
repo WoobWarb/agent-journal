@@ -188,6 +188,30 @@ if (-not (Test-Path $FailLogPath)) {
     Write-Host "  [=] fail_log.md already exists (preserved)" -ForegroundColor DarkGray
 }
 
+# 4f-2. Create active.md template (read first by every new session)
+$ActivePath = Join-Path $DestDir "active.md"
+if (-not (Test-Path $ActivePath)) {
+    $ActiveContent = @'
+# Active Context
+**Updated:** YYYY-MM-DD | **Agent:** (agent name + model)
+
+## Current Status
+Not started yet.
+
+## Deliverables
+| Deliverable | Status | Notes |
+|-------------|--------|-------|
+|             |        |       |
+
+## Handoff
+- **Did:**
+- **Found:**
+- **Next:**
+'@
+    Set-Content -Path $ActivePath -Value $ActiveContent -Encoding UTF8
+    Write-Host "  [+] Created active.md" -ForegroundColor Green
+}
+
 # 4g. Download Cline skill template (SKILL.md)
 if ($Global) {
     $ClineSkillDir = Join-Path $env:USERPROFILE ".cline\skills\agent-journal"
@@ -275,6 +299,8 @@ $RuleText = @'
 
 # Agent Journal Rules
 - Read and follow .agents/AGENTS.md for journaling and context rules.
+- START: Read .agents/active.md before doing anything else in a new chat.
+- AFTER EVERY TASK: Update .agents/active.md (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.
 - CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.
 - PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.
 - EXECUTION LOG: Before each action, log it with status icon (planned, in progress, done, failed). Write the step BEFORE executing it.
@@ -311,14 +337,25 @@ if (-not $Global) {
         Write-Host "  [+] Configured .windsurfrules" -ForegroundColor Green
     }
 
-    # Claude Code - CLAUDE.md (uses @import so rules are always loaded)
+    # Root AGENTS.md - thin pointer read by Codex, Cline, Cursor, Copilot, etc. (append, never overwrite)
+    $rootAgentsMd = Join-Path (Get-Location) "AGENTS.md"
+    $RootAgentsText = "# Agent Journal`n`nBefore any task, read ``.agents/active.md``, then follow the rules in ``.agents/AGENTS.md``.`n`n@.agents/AGENTS.md`n"
+    if (-not (Test-Path $rootAgentsMd)) {
+        Set-Content $rootAgentsMd $RootAgentsText -Encoding UTF8
+        Write-Host "  [+] Created AGENTS.md" -ForegroundColor Green
+    } elseif (-not ((Get-Content $rootAgentsMd -Raw -Encoding UTF8) -match "\.agents/AGENTS\.md")) {
+        Add-Content $rootAgentsMd "`n$RootAgentsText" -Encoding UTF8
+        Write-Host "  [+] Updated AGENTS.md with journal pointer" -ForegroundColor Green
+    }
+
+    # Claude Code - CLAUDE.md imports root AGENTS.md so every agent shares one rule set
     $claudeMd = Join-Path (Get-Location) "CLAUDE.md"
     if (-not (Test-Path $claudeMd)) {
-        Set-Content $claudeMd "# Project Rules`n`n@.agents/AGENTS.md`n" -Encoding UTF8
+        Set-Content $claudeMd "@AGENTS.md`n" -Encoding UTF8
         Write-Host "  [+] Created CLAUDE.md" -ForegroundColor Green
     } elseif (-not ((Get-Content $claudeMd -Raw -Encoding UTF8) -match "AGENTS\.md")) {
-        Add-Content $claudeMd "`n@.agents/AGENTS.md`n" -Encoding UTF8
-        Write-Host "  [+] Updated CLAUDE.md with journal import" -ForegroundColor Green
+        Add-Content $claudeMd "`n@AGENTS.md`n" -Encoding UTF8
+        Write-Host "  [+] Updated CLAUDE.md with AGENTS.md import" -ForegroundColor Green
     }
 
     # GitHub Copilot - .github/copilot-instructions.md
@@ -358,13 +395,13 @@ description: Core system skill for logging, failure memory, and journaling. Use 
 
 # Agent Journal Skill
 You must strictly follow these rules automatically for every task in this project.
-1. Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
-2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding.
+1. Read `.agents/active.md` first, then `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
+2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding, signed with your agent name.
 3. Log step-by-step Execution Log BEFORE each action.
 4. Whenever an action fails or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
 5. Update to `Complete` when done.
 6. Generate `Agent-Journal.html` after modifying the journal.
-7. Update `.agents/active.md`.
+7. Update `.agents/active.md` (status, deliverables table, Did/Found/Next handoff).
 '@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
@@ -386,7 +423,8 @@ Write-Host ""
 Write-Host "  [OK] Ready to start journaling!" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Auto-Journaling configured for:" -ForegroundColor Green
-Write-Host "    - Claude Code    (CLAUDE.md)" -ForegroundColor Gray
+Write-Host "    - Claude Code    (CLAUDE.md -> @AGENTS.md)" -ForegroundColor Gray
+Write-Host "    - Codex & others (AGENTS.md)" -ForegroundColor Gray
 Write-Host "    - Cursor         (.cursorrules)" -ForegroundColor Gray
 Write-Host "    - Windsurf       (.windsurfrules)" -ForegroundColor Gray
 Write-Host "    - GitHub Copilot (.github/copilot-instructions.md)" -ForegroundColor Gray

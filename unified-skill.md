@@ -22,7 +22,10 @@ metadata:
 
 When working on this project, follow these rules automatically:
 
-### 1. Read Project Map, Pipeline & Fail Log First
+### 1. Read Active Context, Project Map, Pipeline & Fail Log First
+
+At the start of every new chat or session, read `.agents/active.md` **before doing anything else**.
+It tells you what the last agent did, what it found, and what to do next.
 
 If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
 This saves tokens and prevents hallucinations about project structure.
@@ -35,7 +38,8 @@ This contains known anti-patterns, dead-end approaches, and past mistakes in thi
 
 ### 2. Pre-Journaling (BEFORE coding)
 
-Before making any code changes, write an entry in `.agents/Agent-Journal.md`:
+Before making any code changes, write an entry in `.agents/Agent-Journal.md`.
+Always sign it with your agent name and model (e.g. `Claude Code (Opus)`, `Cursor (GPT)`, `Antigravity (Gemini)`), so it's clear which AI did which work.
 
 ```markdown
 ---
@@ -43,6 +47,7 @@ Before making any code changes, write an entry in `.agents/Agent-Journal.md`:
 **Status:** 🔄 In Progress
 **Type:** [🚀 Feature | 🐛 Fix | 🎨 UI | 🔧 Refactor | 📦 Setup | 📄 Docs]
 **Impact:** [🟢 Low | 🟡 Medium | 🔴 High]
+**Agent:** [Agent name (model)]
 
 ### TL;DR
 > One-line summary of what will be done.
@@ -140,10 +145,31 @@ VIEWER_HTML_PLACEHOLDER
 
 **Why this matters:** Long markdown files don't get read. An HTML dashboard always gets opened.
 
-### 7. Session Context
+### 7. Session Context (AFTER every task)
 
-Update `.agents/active.md` with current task focus so the next session can resume.
-Include the last completed step number so the next agent knows the exact resume point.
+Update `.agents/active.md` so the next session can resume. Keep it short — it is read first, every time:
+
+```markdown
+# Active Context
+**Updated:** YYYY-MM-DD | **Agent:** [Agent name (model)]
+
+## Current Status
+One or two lines: what state the project is in right now.
+
+## Deliverables
+| Deliverable | Status | Notes |
+|-------------|--------|-------|
+| Auth service | ✅ Done | RS256 JWT |
+| Auth middleware | ⏳ In progress | Step 4 of 6 in journal |
+| Auth tests | 🔲 Not started | |
+
+## Handoff
+- **Did:** What was done this session
+- **Found:** Anything surprising — bugs, constraints, gotchas
+- **Next:** What the next agent should do first
+```
+
+Include the last completed step number in **Next** when work stopped mid-task.
 
 ### 8. Technical Decisions
 
@@ -169,12 +195,14 @@ If you sense the conversation is getting long or the user mentions switching:
 ## File Structure
 
 ```
+AGENTS.md               # Thin pointer at project root — read by Codex, Cline, Cursor, Copilot, etc.
+CLAUDE.md               # Contains `@AGENTS.md` so Claude Code loads the same rules
 .agents/
-├── AGENTS.md           # This rules file (universal)
+├── AGENTS.md           # This rules file (universal, single source of truth)
 ├── Agent-Journal.md    # Human-readable work diary (source of truth)
 ├── Agent-Journal.html  # ✨ Auto-generated HTML companion — open in browser
 ├── fail_log.md         # ⚠️ Known pitfalls, failed approaches & "Do Not Repeat" rules
-├── active.md           # Current task context (for AI resume)
+├── active.md           # Current status, deliverables, 3-line handoff (read FIRST)
 ├── pipeline.md         # Build, test, lint, and deploy commands for this project
 ├── PROJECT_MAP.md      # Auto-generated codebase map
 ├── graph.json          # Machine-readable project graph
@@ -189,9 +217,9 @@ If you sense the conversation is getting long or the user mentions switching:
 ## Platform-Specific Integration
 
 ### Claude Code
-Add to project `CLAUDE.md`:
+The installer adds this line to project `CLAUDE.md`, which loads root `AGENTS.md` (which in turn imports `.agents/AGENTS.md`):
 ```
-Read and follow .agents/AGENTS.md for journaling rules.
+@AGENTS.md
 ```
 
 ### Cursor / Windsurf
