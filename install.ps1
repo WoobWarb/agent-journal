@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "3.4.0"
+$Version = "3.5.0"
 
 Write-Host ""
 Write-Host "  +======================================+" -ForegroundColor Cyan
@@ -35,57 +35,53 @@ if (-not (Test-Path $DestDir)) {
     Write-Host "  [=] Directory already exists: .agents/" -ForegroundColor DarkGray
 }
 
-# 3. Check for existing file and preserve sessions
+# Copy a file into .agents/backup/ before it gets replaced, so old content is never lost
+function Backup-File([string]$Path) {
+    if (-not (Test-Path $Path)) { return }
+    $BackupDir = Join-Path $DestDir "backup"
+    if (-not (Test-Path $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
+    $Name = [IO.Path]::GetFileNameWithoutExtension($Path) + "." + (Get-Date -Format "yyyyMMdd-HHmmss") + [IO.Path]::GetExtension($Path)
+    Copy-Item $Path (Join-Path $BackupDir $Name) -Force
+    Write-Host "  [i] Backed up old $([IO.Path]::GetFileName($Path)) to .agents/backup/$Name" -ForegroundColor Gray
+}
+
+# 3. Existing journal is the user's history -- never modify it
 $DestPath = Join-Path $DestDir $SkillFile
-$ExistingSessions = ""
 
 if (Test-Path $DestPath) {
     Write-Host ""
-    Write-Host "  [!] Agent-Journal.md already exists!" -ForegroundColor Yellow
-    
-    $content = Get-Content $DestPath -Raw -Encoding UTF8
-    if ($content -match "(?s)(---\s*\r?\n\s*##\s*\[.*)") {
-        $ExistingSessions = $Matches[1]
-        Write-Host "  [i] Found existing session logs. They will be preserved and merged." -ForegroundColor Gray
-    }
-    
+    Write-Host "  [=] Agent-Journal.md already exists (kept as-is, not modified)" -ForegroundColor DarkGray
+
     if (-not $Force) {
-        $answer = Read-Host "      Update installer files & merge existing journal? (Y/n)"
+        $answer = Read-Host "      Update installer files? Your existing .md files will be kept. (Y/n)"
         if ($answer -eq "n" -or $answer -eq "N") {
             Write-Host "  [x] Installation cancelled." -ForegroundColor Red
             Write-Host ""
             return
         }
     }
-}
-
-# 4. Download the skill template
-Write-Host "  [*] Downloading template from GitHub..." -ForegroundColor Gray
-
-try {
-    $TempPath = [System.IO.Path]::GetTempFileName()
-    Invoke-WebRequest -Uri "$RepoUrl/$SkillFile" -OutFile $TempPath -UseBasicParsing
-    $NewTemplate = Get-Content $TempPath -Raw -Encoding UTF8
-    Remove-Item $TempPath
-    
-    if ($ExistingSessions) {
-        $MergedContent = $NewTemplate.TrimEnd() + "`n`n" + $ExistingSessions.Trim() + "`n"
-        Set-Content -Path $DestPath -Value $MergedContent -Encoding UTF8
-        Write-Host "  [+] Successfully updated Agent-Journal.md (merged old sessions)" -ForegroundColor Green
-    } else {
-        Set-Content -Path $DestPath -Value $NewTemplate -Encoding UTF8
+} else {
+    # 4. Download the journal template (first install only)
+    Write-Host "  [*] Downloading template from GitHub..." -ForegroundColor Gray
+    try {
+        Invoke-WebRequest -Uri "$RepoUrl/$SkillFile" -OutFile $DestPath -UseBasicParsing
         Write-Host "  [+] Successfully installed Agent-Journal.md" -ForegroundColor Green
+    } catch {
+        Write-Host "  [!] Download or write failed: $_" -ForegroundColor Red
+        return
     }
-} catch {
-    Write-Host "  [!] Download or write failed: $_" -ForegroundColor Red
-    return
 }
 
 # 4b. Download AGENTS.md (universal rules for all AI agents)
 $AgentsMdPath = Join-Path $DestDir "AGENTS.md"
 Write-Host "  [*] Downloading AGENTS.md (universal rules)..." -ForegroundColor Gray
 try {
-    Invoke-WebRequest -Uri "$RepoUrl/unified-skill.md" -OutFile $AgentsMdPath -UseBasicParsing
+    $AgentsTmp = [System.IO.Path]::GetTempFileName()
+    Invoke-WebRequest -Uri "$RepoUrl/unified-skill.md" -OutFile $AgentsTmp -UseBasicParsing
+    if ((Test-Path $AgentsMdPath) -and ((Get-FileHash $AgentsMdPath).Hash -ne (Get-FileHash $AgentsTmp).Hash)) {
+        Backup-File $AgentsMdPath
+    }
+    Move-Item $AgentsTmp $AgentsMdPath -Force
     Write-Host "  [+] Successfully installed AGENTS.md" -ForegroundColor Green
 } catch {
     Write-Host "  [!] Could not download AGENTS.md (non-fatal)." -ForegroundColor Yellow
@@ -115,8 +111,19 @@ if (-not (Test-Path $PipelinePath)) {
     $PipelineContent = @'
 # Pipeline
 
-> Fill this in so your AI knows exactly how to build, test, and deploy this project.
+> How to operate this project: set it up, build, test, run, deploy, and use it.
 > Read this file before running any commands -- don't guess defaults.
+> AI agents: fill in empty sections as you learn them, and update this file whenever a command or step changes.
+
+## Prerequisites
+
+- Tools & versions:
+- Accounts / access needed:
+- Environment variables (names only, never values):
+
+## First-Time Setup
+
+1.
 
 ## Install
 
@@ -154,6 +161,24 @@ if (-not (Test-Path $PipelinePath)) {
 # e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
 ```
 
+## Usage
+
+How to actually use the system once it is running (URLs, commands, typical workflows):
+
+-
+
+## Verify It Works
+
+How to tell that a build / deploy succeeded (health check, expected output, what to look at):
+
+-
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+|         |       |     |
+
 ## CI/CD
 
 - Platform:
@@ -164,6 +189,19 @@ if (-not (Test-Path $PipelinePath)) {
 '@
     Set-Content -Path $PipelinePath -Value $PipelineContent -Encoding UTF8
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
+}
+
+# 4e-2. Download system.md template (how the system works) -- first install only
+$SystemPath = Join-Path $DestDir "system.md"
+if (-not (Test-Path $SystemPath)) {
+    try {
+        Invoke-WebRequest -Uri "$RepoUrl/system.md" -OutFile $SystemPath -UseBasicParsing
+        Write-Host "  [+] Created system.md (architecture, protocols, hardware, config)" -ForegroundColor Green
+    } catch {
+        Write-Host "  [!] Could not download system.md (non-fatal)." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  [=] system.md already exists (preserved)" -ForegroundColor DarkGray
 }
 
 # 4f. Create or download fail_log.md (Failure & Anti-Pattern Memory)
@@ -248,7 +286,8 @@ if ($Global -or (Test-Path $HermesHome)) {
 
 ## Agent Journal & Fail Log Protocol
 - Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view("agent-journal")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.
-- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Read `.agents/PROJECT_MAP.md`, `.agents/system.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Keep `.agents/system.md` (how the system works) and `.agents/pipeline.md` (how to operate it) up to date in the same task as the change. Never write secret values under `.agents/`.
 - Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches in `.agents/fail_log.md`.
 '@
     if (Test-Path $HermesSoulPath) {
@@ -284,13 +323,14 @@ if (-not $Global) {
     }
 }
 
-# 6. Add to .gitignore if not already there
+# 6. Keep .agents/ shareable through git -- ignore only the private and backup folders
+#    (a project that already ignores .agents/ is left as it is)
 $gitignorePath = Join-Path (Get-Location) ".gitignore"
-if (Test-Path $gitignorePath) {
+if ((-not $Global) -and (Test-Path $gitignorePath)) {
     $content = Get-Content $gitignorePath -Raw -Encoding UTF8
     if ($content -notmatch "\.agents/") {
-        Add-Content $gitignorePath "`n# Agent Journal`n.agents/" -Encoding UTF8
-        Write-Host "  [+] Added .agents/ to .gitignore" -ForegroundColor Green
+        Add-Content $gitignorePath "`n# Agent Journal (local-only parts; the rest of .agents/ is meant to be committed)`n.agents/private/`n.agents/backup/" -Encoding UTF8
+        Write-Host "  [+] Added .agents/private/ and .agents/backup/ to .gitignore" -ForegroundColor Green
     }
 }
 
@@ -301,7 +341,8 @@ $RuleText = @'
 - Read and follow .agents/AGENTS.md for journaling and context rules.
 - START: Read .agents/active.md before doing anything else in a new chat.
 - AFTER EVERY TASK: Update .agents/active.md (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.
-- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.
+- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/system.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.
+- SYSTEM DOCS: When a change alters architecture, a protocol/API, hardware, critical config, or how to set up/run/use the project, update .agents/system.md or .agents/pipeline.md in the same task. Never write secret values under .agents/.
 - PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.
 - EXECUTION LOG: Before each action, log it with status icon (planned, in progress, done, failed). Write the step BEFORE executing it.
 - FAILURE LOGGING: Whenever a step fails or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.
@@ -319,7 +360,7 @@ if (-not $Global) {
     }
     $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
     if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
-        Set-Content $ClineRulePath $RuleText -Encoding UTF8
+        Add-Content $ClineRulePath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured .clinerules/agent-journal.md (Cline rule)" -ForegroundColor Green
     }
 
@@ -395,13 +436,14 @@ description: Core system skill for logging, failure memory, and journaling. Use 
 
 # Agent Journal Skill
 You must strictly follow these rules automatically for every task in this project.
-1. Read `.agents/active.md` first, then `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
+1. Read `.agents/active.md` first, then `.agents/PROJECT_MAP.md`, `.agents/system.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` if they exist BEFORE planning or coding.
 2. ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE coding, signed with your agent name.
 3. Log step-by-step Execution Log BEFORE each action.
 4. Whenever an action fails or hits a dead-end, record the root cause and "Do Not Repeat" rule in `.agents/fail_log.md`.
 5. Update to `Complete` when done.
 6. Generate `Agent-Journal.html` after modifying the journal.
 7. Update `.agents/active.md` (status, deliverables table, Did/Found/Next handoff).
+8. When a change alters architecture, a protocol/API, hardware, critical config, or how to set up/run/use the project, update `.agents/system.md` or `.agents/pipeline.md` in the same task. Never write secret values under `.agents/`.
 '@
     Set-Content -Path $antiGravSkillMdPath -Value $antiGravSkillMdContent -Encoding UTF8
     Write-Host "  [+] Configured Global Antigravity Plugin (~/.gemini/config/plugins/...)" -ForegroundColor Green
@@ -413,7 +455,7 @@ You must strictly follow these rules automatically for every task in this projec
     }
     $ClineRulePath = Join-Path $ClineRulesDir "agent-journal.md"
     if (-not (Test-Path $ClineRulePath) -or -not ((Get-Content $ClineRulePath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match "Agent Journal")) {
-        Set-Content $ClineRulePath $RuleText -Encoding UTF8
+        Add-Content $ClineRulePath $RuleText -Encoding UTF8
         Write-Host "  [+] Configured Cline global rule (~\.cline\rules\agent-journal.md)" -ForegroundColor Green
     }
 }
@@ -432,6 +474,7 @@ Write-Host "    - Antigravity    (Native Global Skill + .antigravity/)" -Foregro
 Write-Host "    - Cline          (.clinerules\ + .cline\skills\agent-journal\)" -ForegroundColor Gray
 Write-Host "    - Hermes Agent   (~/.hermes/skills/agent-journal\ + .skills/agent-journal\)" -ForegroundColor Gray
 Write-Host "  Failure Memory: .agents/fail_log.md enabled (prevents repeating failed approaches)." -ForegroundColor Green
+Write-Host "  System Docs: fill in .agents/system.md and .agents/pipeline.md (or ask your AI to)." -ForegroundColor Green
 Write-Host "  HTML Companion: Agent will generate Agent-Journal.html after each session." -ForegroundColor Green
 Write-Host ""
 Write-Host "  --------------------------------------" -ForegroundColor DarkGray

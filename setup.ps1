@@ -10,7 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "3.4.0"
+$Version = "3.5.0"
 $SkillsDir = $PSScriptRoot
 
 Write-Host ""
@@ -41,31 +41,35 @@ foreach ($dir in $dirs) {
 }
 Write-Host "  [+] Created .agents/ structure" -ForegroundColor Green
 
-# Copy unified skill as AGENTS.md
+# Copy a file into .agents/backup/ before it gets replaced, so old content is never lost
+function Backup-File([string]$Path) {
+    if (-not (Test-Path $Path)) { return }
+    $backupDir = Join-Path $agentsDir "backup"
+    if (-not (Test-Path $backupDir)) {
+        New-Item -ItemType Directory -Path $backupDir | Out-Null
+        Set-Content (Join-Path $backupDir ".gitignore") "*" -Encoding UTF8
+    }
+    $name = [IO.Path]::GetFileNameWithoutExtension($Path) + "." + (Get-Date -Format "yyyyMMdd-HHmmss") + [IO.Path]::GetExtension($Path)
+    Copy-Item $Path (Join-Path $backupDir $name) -Force
+    Write-Host "  [i] Backed up old $([IO.Path]::GetFileName($Path)) to .agents/backup/$name" -ForegroundColor Gray
+}
+
+# Copy unified skill as AGENTS.md (back up the old one if it differs)
 $skillSource = Join-Path $SkillsDir "unified-skill.md"
 $agentsMdDest = Join-Path $agentsDir "AGENTS.md"
 if (Test-Path $skillSource) {
+    if ((Test-Path $agentsMdDest) -and ((Get-FileHash $agentsMdDest).Hash -ne (Get-FileHash $skillSource).Hash)) {
+        Backup-File $agentsMdDest
+    }
     Copy-Item $skillSource $agentsMdDest -Force
     Write-Host "  [+] Installed AGENTS.md (unified rules)" -ForegroundColor Green
 }
 
-# Create Agent-Journal.md (empty template)
+# Create Agent-Journal.md (first install only -- an existing journal is never modified)
 $journalPath = Join-Path $agentsDir "Agent-Journal.md"
-$ExistingSessions = ""
-
 if (Test-Path $journalPath) {
-    if (-not $Force) {
-        Write-Host "  [=] Agent-Journal.md already exists (skipped)" -ForegroundColor DarkGray
-    } else {
-        $content = Get-Content $journalPath -Raw -Encoding UTF8
-        if ($content -match "(?s)(---\s*\r?\n\s*##\s*\[.*)") {
-            $ExistingSessions = $Matches[1]
-            Write-Host "  [i] Found existing session logs. They will be preserved and merged." -ForegroundColor Gray
-        }
-    }
-}
-
-if (-not (Test-Path $journalPath) -or $Force) {
+    Write-Host "  [=] Agent-Journal.md already exists (kept as-is, not modified)" -ForegroundColor DarkGray
+} else {
     $journalContent = @'
 # Agent Journal
 
@@ -74,14 +78,8 @@ if (-not (Test-Path $journalPath) -or $Force) {
 ---
 
 '@
-    if ($ExistingSessions) {
-        $journalContent = $journalContent.TrimEnd() + "`n`n" + $ExistingSessions.Trim() + "`n"
-        Set-Content $journalPath $journalContent -Encoding UTF8
-        Write-Host "  [+] Updated Agent-Journal.md (merged old sessions)" -ForegroundColor Green
-    } else {
-        Set-Content $journalPath $journalContent -Encoding UTF8
-        Write-Host "  [+] Created Agent-Journal.md" -ForegroundColor Green
-    }
+    Set-Content $journalPath $journalContent -Encoding UTF8
+    Write-Host "  [+] Created Agent-Journal.md" -ForegroundColor Green
 }
 
 # Create pipeline.md
@@ -90,8 +88,19 @@ if (-not (Test-Path $pipelinePath)) {
     $pipelineContent = @'
 # Pipeline
 
-> Fill this in so your AI knows exactly how to build, test, and deploy this project.
+> How to operate this project: set it up, build, test, run, deploy, and use it.
 > Read this file before running any commands -- don't guess defaults.
+> AI agents: fill in empty sections as you learn them, and update this file whenever a command or step changes.
+
+## Prerequisites
+
+- Tools & versions:
+- Accounts / access needed:
+- Environment variables (names only, never values):
+
+## First-Time Setup
+
+1.
 
 ## Install
 
@@ -129,6 +138,24 @@ if (-not (Test-Path $pipelinePath)) {
 # e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
 ```
 
+## Usage
+
+How to actually use the system once it is running (URLs, commands, typical workflows):
+
+-
+
+## Verify It Works
+
+How to tell that a build / deploy succeeded (health check, expected output, what to look at):
+
+-
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+|         |       |     |
+
 ## CI/CD
 
 - Platform: <!-- GitHub Actions / GitLab CI / CircleCI / etc. -->
@@ -140,6 +167,16 @@ if (-not (Test-Path $pipelinePath)) {
 '@
     Set-Content $pipelinePath $pipelineContent -Encoding UTF8
     Write-Host "  [+] Created pipeline.md" -ForegroundColor Green
+}
+
+# Copy system.md template (how the system works) -- never overwrite
+$systemSource = Join-Path $SkillsDir "system.md"
+$systemDest = Join-Path $agentsDir "system.md"
+if (Test-Path $systemDest) {
+    Write-Host "  [=] system.md already exists (preserved)" -ForegroundColor DarkGray
+} elseif (Test-Path $systemSource) {
+    Copy-Item $systemSource $systemDest
+    Write-Host "  [+] Created system.md (architecture, protocols, hardware, config)" -ForegroundColor Green
 }
 
 # Copy or create fail_log.md (Failure & Anti-Pattern Memory)
@@ -259,7 +296,8 @@ if (-not $Global) {
 - Read and follow `.agents/AGENTS.md` for journaling and context rules.
 - START: Read `.agents/active.md` before doing anything else in a new chat.
 - AFTER EVERY TASK: Update `.agents/active.md` (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.
-- CONTEXT & FAIL LOG: Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) BEFORE planning or writing code so you never repeat past failures.
+- CONTEXT & FAIL LOG: Read `.agents/PROJECT_MAP.md`, `.agents/system.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) BEFORE planning or writing code so you never repeat past failures.
+- SYSTEM DOCS: When a change alters architecture, a protocol/API, hardware, critical config, or how to set up/run/use the project, update `.agents/system.md` or `.agents/pipeline.md` in the same task. Never write secret values under `.agents/`.
 - PRE-JOURNALING: ALWAYS write an initial entry in `.agents/Agent-Journal.md` BEFORE making any code changes. Set status to `In Progress`.
 - EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.
 - FAILURE LOGGING: Whenever a step fails or hits a dead-end, record the root cause and 'Do Not Repeat' rule in `.agents/fail_log.md`.
@@ -274,7 +312,7 @@ if (-not $Global) {
     }
     $clineRulesPath = Join-Path $clineRulesDir "agent-journal.md"
     if (-not (Test-Path $clineRulesPath) -or -not (Select-String -Path $clineRulesPath -Pattern "Agent Journal" -Quiet)) {
-        Set-Content $clineRulesPath $ruleBlock -Encoding UTF8
+        Add-Content $clineRulesPath $ruleBlock -Encoding UTF8
         Write-Host "  [+] Configured .clinerules/agent-journal.md (Cline rule)" -ForegroundColor Green
     }
 
@@ -393,6 +431,7 @@ Write-Host "    1. Read PROJECT_MAP.md & fail_log.md before working" -Foreground
 Write-Host "    2. Write journal entries before/after changes" -ForegroundColor Gray
 Write-Host "    3. Log failed approaches into fail_log.md so mistakes are never repeated" -ForegroundColor Gray
 Write-Host "    4. Update active.md for session resume" -ForegroundColor Gray
+Write-Host "    5. Keep system.md (how it works) and pipeline.md (how to run it) up to date" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  To regenerate the project map:" -ForegroundColor DarkGray
 Write-Host "    python agent-map.py" -ForegroundColor DarkGray

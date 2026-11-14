@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="3.4.0"
+VERSION="3.5.0"
 REPO_URL="https://raw.githubusercontent.com/WoobWarb/agent-journal/main"
 SKILL_FILE="Agent-Journal.md"
 GLOBAL=false
@@ -45,65 +45,61 @@ fi
 
 DEST_PATH="$DEST_DIR/$SKILL_FILE"
 
-# Check existing and extract session logs to preserve
-EXISTING_SESSIONS=""
+# Copy a file into .agents/backup/ before it gets replaced, so old content is never lost
+backup_file() {
+    [ -f "$1" ] || return 0
+    mkdir -p "$DEST_DIR/backup"
+    local base name
+    base=$(basename "$1")
+    name="${base%.*}.$(date +%Y%m%d-%H%M%S).${base##*.}"
+    cp "$1" "$DEST_DIR/backup/$name"
+    echo "  [i] Backed up old $base to .agents/backup/$name"
+}
+
+if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
+    echo "  [!] Error: curl or wget is required."
+    exit 1
+fi
+
+# Existing journal is the user's history -- never modify it
 if [ -f "$DEST_PATH" ]; then
     echo ""
-    echo "  [!] Agent-Journal.md already exists!"
-    
-    # Extract session logs starting with --- followed by ## [
-    if command -v python3 &> /dev/null; then
-        EXISTING_SESSIONS=$(python3 -c "import sys, re; content=open('$DEST_PATH','r',encoding='utf-8').read(); m=re.search(r'(?s)---\s*\r?\n\s*##\s*\[.*', content); print(m.group(0)) if m else None" 2>/dev/null)
-    elif command -v python &> /dev/null; then
-        EXISTING_SESSIONS=$(python -c "import sys, re; content=open('$DEST_PATH','r',encoding='utf-8').read(); m=re.search(r'(?s)---\s*\r?\n\s*##\s*\[.*', content); print(m.group(0)) if m else None" 2>/dev/null)
-    fi
-    
-    if [ ! -z "$EXISTING_SESSIONS" ]; then
-        echo "  [i] Found existing session logs. They will be preserved and merged."
-    fi
-    
+    echo "  [=] Agent-Journal.md already exists (kept as-is, not modified)"
+
     if [ "$FORCE" = false ]; then
-        read -p "      Update installer files & merge existing journal? (Y/n) " answer
+        read -p "      Update installer files? Your existing .md files will be kept. (Y/n) " answer
         if [[ "$answer" = "n" || "$answer" = "N" ]]; then
             echo "  [x] Installation cancelled."
             echo ""
             exit 0
         fi
     fi
-fi
-
-# Download
-echo "  [*] Downloading template from GitHub..."
-TEMP_PATH=$(mktemp)
-
-if command -v curl &> /dev/null; then
-    curl -fsSL "$REPO_URL/$SKILL_FILE" -o "$TEMP_PATH"
-elif command -v wget &> /dev/null; then
-    wget -q "$REPO_URL/$SKILL_FILE" -O "$TEMP_PATH"
 else
-    echo "  [!] Error: curl or wget is required."
-    rm -f "$TEMP_PATH"
-    exit 1
-fi
-
-if [ ! -z "$EXISTING_SESSIONS" ]; then
-    cat "$TEMP_PATH" > "$DEST_PATH"
-    echo -e "\n\n$EXISTING_SESSIONS" >> "$DEST_PATH"
-    echo "  [+] Successfully updated Agent-Journal.md (merged old sessions)"
-else
-    cat "$TEMP_PATH" > "$DEST_PATH"
+    # Download the journal template (first install only)
+    echo "  [*] Downloading template from GitHub..."
+    if command -v curl &> /dev/null; then
+        curl -fsSL "$REPO_URL/$SKILL_FILE" -o "$DEST_PATH"
+    else
+        wget -q "$REPO_URL/$SKILL_FILE" -O "$DEST_PATH"
+    fi
     echo "  [+] Successfully installed Agent-Journal.md"
 fi
-rm -f "$TEMP_PATH"
 
-# Download AGENTS.md (universal rules for all AI agents)
+# Download AGENTS.md (universal rules for all AI agents) - back up the old one if it differs
 echo "  [*] Downloading AGENTS.md (universal rules)..."
 AGENTS_MD_PATH="$DEST_DIR/AGENTS.md"
-if command -v curl &> /dev/null; then
-    curl -fsSL "$REPO_URL/unified-skill.md" -o "$AGENTS_MD_PATH" && echo "  [+] Successfully installed AGENTS.md" || echo "  [!] Could not download AGENTS.md (non-fatal)."
-elif command -v wget &> /dev/null; then
-    wget -q "$REPO_URL/unified-skill.md" -O "$AGENTS_MD_PATH" && echo "  [+] Successfully installed AGENTS.md" || echo "  [!] Could not download AGENTS.md (non-fatal)."
+AGENTS_TMP=$(mktemp)
+if (command -v curl &> /dev/null && curl -fsSL "$REPO_URL/unified-skill.md" -o "$AGENTS_TMP") || \
+   (command -v wget &> /dev/null && wget -q "$REPO_URL/unified-skill.md" -O "$AGENTS_TMP"); then
+    if [ -f "$AGENTS_MD_PATH" ] && ! cmp -s "$AGENTS_MD_PATH" "$AGENTS_TMP"; then
+        backup_file "$AGENTS_MD_PATH"
+    fi
+    cat "$AGENTS_TMP" > "$AGENTS_MD_PATH"
+    echo "  [+] Successfully installed AGENTS.md"
+else
+    echo "  [!] Could not download AGENTS.md (non-fatal)."
 fi
+rm -f "$AGENTS_TMP"
 
 # Download viewer
 echo "  [*] Downloading Journal Viewer..."
@@ -132,8 +128,19 @@ if [ ! -f "$PIPELINE_PATH" ]; then
     cat > "$PIPELINE_PATH" << 'EOF'
 # Pipeline
 
-> Fill this in so your AI knows exactly how to build, test, and deploy this project.
+> How to operate this project: set it up, build, test, run, deploy, and use it.
 > Read this file before running any commands -- don't guess defaults.
+> AI agents: fill in empty sections as you learn them, and update this file whenever a command or step changes.
+
+## Prerequisites
+
+- Tools & versions:
+- Accounts / access needed:
+- Environment variables (names only, never values):
+
+## First-Time Setup
+
+1.
 
 ## Install
 
@@ -171,6 +178,24 @@ if [ ! -f "$PIPELINE_PATH" ]; then
 # e.g. npm run deploy / docker compose up -d / kubectl apply -f k8s/
 ```
 
+## Usage
+
+How to actually use the system once it is running (URLs, commands, typical workflows):
+
+-
+
+## Verify It Works
+
+How to tell that a build / deploy succeeded (health check, expected output, what to look at):
+
+-
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+|         |       |     |
+
 ## CI/CD
 
 - Platform:
@@ -180,6 +205,20 @@ if [ ! -f "$PIPELINE_PATH" ]; then
 
 EOF
     echo "  [+] Created pipeline.md"
+fi
+
+# Download system.md template (how the system works) - first install only
+SYSTEM_PATH="$DEST_DIR/system.md"
+if [ ! -f "$SYSTEM_PATH" ]; then
+    if (command -v curl &> /dev/null && curl -fsSL "$REPO_URL/system.md" -o "$SYSTEM_PATH" 2>/dev/null) || \
+       (command -v wget &> /dev/null && wget -q "$REPO_URL/system.md" -O "$SYSTEM_PATH" 2>/dev/null); then
+        echo "  [+] Created system.md (architecture, protocols, hardware, config)"
+    else
+        rm -f "$SYSTEM_PATH"
+        echo "  [!] Could not download system.md (non-fatal)."
+    fi
+else
+    echo "  [=] system.md already exists (preserved)"
 fi
 
 # Create or download fail_log.md (Failure & Anti-Pattern Memory)
@@ -256,7 +295,8 @@ if [ "$GLOBAL" = true ] || [ -d "$HOME/.hermes" ]; then
 
 ## Agent Journal & Fail Log Protocol
 - Always follow the protocols defined in `.skills/agent-journal/SKILL.md` (or load via `skill_view("agent-journal")` / `~/.hermes/skills/agent-journal/SKILL.md`) before and after modifying files.
-- Read `.agents/PROJECT_MAP.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Read `.agents/PROJECT_MAP.md`, `.agents/system.md`, `.agents/pipeline.md`, and `.agents/fail_log.md` (if they exist) before planning or writing code.
+- Keep `.agents/system.md` (how the system works) and `.agents/pipeline.md` (how to operate it) up to date in the same task as the change. Never write secret values under `.agents/`.
 - Always log plans and step-by-step execution in `.agents/Agent-Journal.md`, and record any failed approaches (`❌`) in `.agents/fail_log.md`.
 EOF
         echo "  [+] Bound agent-journal into Hermes System Prompt (~/.hermes/SOUL.md)"
@@ -287,16 +327,17 @@ if [ "$GLOBAL" = false ]; then
     fi
 fi
 
-# Add to .gitignore
-if [ -f ".gitignore" ]; then
+# Keep .agents/ shareable through git - ignore only the private and backup folders
+# (a project that already ignores .agents/ is left as it is)
+if [ "$GLOBAL" = false ] && [ -f ".gitignore" ]; then
     if ! grep -q "\.agents/" .gitignore; then
-        echo -e "\n# Agent Journal\n.agents/" >> .gitignore
-        echo "  [+] Added .agents/ to .gitignore"
+        printf "\n# Agent Journal (local-only parts; the rest of .agents/ is meant to be committed)\n.agents/private/\n.agents/backup/\n" >> .gitignore
+        echo "  [+] Added .agents/private/ and .agents/backup/ to .gitignore"
     fi
 fi
 
 # Configure AI Auto-Journaling (all platforms)
-RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- START: Read .agents/active.md before doing anything else in a new chat.\n- AFTER EVERY TASK: Update .agents/active.md (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.\n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Do not ask for permission to journal, just do it automatically.\n"
+RULE_TEXT="\n# Agent Journal Rules\n- Read and follow .agents/AGENTS.md for journaling and context rules.\n- START: Read .agents/active.md before doing anything else in a new chat.\n- AFTER EVERY TASK: Update .agents/active.md (status, deliverables table, Did/Found/Next handoff) and sign journal entries with your agent name.\n- CONTEXT & FAIL LOG: Read .agents/PROJECT_MAP.md, .agents/system.md, .agents/pipeline.md, and .agents/fail_log.md (if they exist) BEFORE planning or writing code so you never repeat past failures.\n- SYSTEM DOCS: When a change alters architecture, a protocol/API, hardware, critical config, or how to set up/run/use the project, update .agents/system.md or .agents/pipeline.md in the same task. Never write secret values under .agents/.\n- PRE-JOURNALING: ALWAYS write an initial entry in .agents/Agent-Journal.md BEFORE making any code changes. Set status to In Progress and list planned actions.\n- EXECUTION LOG: Before each action, log it with status icon (planned/in progress/done/failed). Write the step BEFORE executing it.\n- FAILURE LOGGING: Whenever a step fails (❌) or hits a dead-end, record the root cause and 'Do Not Repeat' rule in .agents/fail_log.md.\n- COMPLETION: Once work is complete, update the entry status to Complete and generate .agents/Agent-Journal.html from the markdown.\n- Do not ask for permission to journal, just do it automatically.\n"
 
 if [ "$GLOBAL" = false ]; then
     echo "  [*] Configuring AI Auto-Journaling for all platforms..."
@@ -304,7 +345,7 @@ if [ "$GLOBAL" = false ]; then
     # Cline - .clinerules/agent-journal.md (always-active workspace rule)
     if ! ([ -f ".clinerules/agent-journal.md" ] && grep -q "Agent Journal" ".clinerules/agent-journal.md"); then
         mkdir -p ".clinerules"
-        printf "%b" "$RULE_TEXT" > ".clinerules/agent-journal.md"
+        printf "%b" "$RULE_TEXT" >> ".clinerules/agent-journal.md"
         echo "  [+] Configured .clinerules/agent-journal.md (Cline rule)"
     fi
 
@@ -358,7 +399,7 @@ else
     # Cline global rule (~/.cline/rules/agent-journal.md)
     mkdir -p "$HOME/.cline/rules"
     if ! ([ -f "$HOME/.cline/rules/agent-journal.md" ] && grep -q "Agent Journal" "$HOME/.cline/rules/agent-journal.md"); then
-        printf "%b" "$RULE_TEXT" > "$HOME/.cline/rules/agent-journal.md"
+        printf "%b" "$RULE_TEXT" >> "$HOME/.cline/rules/agent-journal.md"
         echo "  [+] Configured Cline global rule (~/.cline/rules/agent-journal.md)"
     fi
 fi
@@ -380,6 +421,7 @@ else
     echo "    - Cline          (.clinerules/ + .cline/skills/)"
 fi
 echo "  ⚠️ Failure Memory enabled (.agents/fail_log.md)."
+echo "  📐 System Docs: fill in .agents/system.md and .agents/pipeline.md (or ask your AI to)."
 echo "  🌐 HTML Companion enabled. Agent will generate Agent-Journal.html after each session."
 echo ""
 echo "  📊 Open .agents/Agent-Journal.html in any browser to view your journal dashboard"

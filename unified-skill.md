@@ -1,7 +1,7 @@
 ---
 name: agent-journal
-description: Universal Agent Skill (Context + Journal + Map + Fail Log) — Read PROJECT_MAP.md and fail_log.md, write pre-journal plans and step-by-step execution logs in .agents/Agent-Journal.md, log failures in .agents/fail_log.md, and generate HTML companion before and after modifying files.
-version: 3.4.0
+description: Universal Agent Skill (Context + Journal + Map + System Docs + Fail Log) — Read PROJECT_MAP.md, system.md and fail_log.md, write pre-journal plans and step-by-step execution logs in .agents/Agent-Journal.md, log failures in .agents/fail_log.md, and generate HTML companion before and after modifying files.
+version: 3.5.0
 author: WoobWarb
 license: MIT
 platforms: [linux, macos, windows]
@@ -11,9 +11,9 @@ metadata:
     homepage: https://github.com/WoobWarb/agent-journal
 ---
 
-# Universal Agent Skill: Context + Journal + Map + Fail Log
+# Universal Agent Skill: Context + Journal + Map + System Docs + Fail Log
 
-**Version:** 3.4
+**Version:** 3.5
 **Compatible:** Claude Code, Cline, Antigravity, Hermes Agent, Cursor, Windsurf, GitHub Copilot, any LLM agent
 
 ---
@@ -22,13 +22,16 @@ metadata:
 
 When working on this project, follow these rules automatically:
 
-### 1. Read Active Context, Project Map, Pipeline & Fail Log First
+### 1. Read Active Context, Project Map, System Docs, Pipeline & Fail Log First
 
 At the start of every new chat or session, read `.agents/active.md` **before doing anything else**.
 It tells you what the last agent did, what it found, and what to do next.
 
 If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
 This saves tokens and prevents hallucinations about project structure.
+
+If `.agents/system.md` exists, read it before changing anything that crosses a component boundary.
+It describes how the system works: architecture, protocols/APIs, hardware, config values that must match, and where secrets live.
 
 If `.agents/pipeline.md` exists, read it before running any build, test, lint, or deploy commands.
 This tells you the exact commands for this project — don't guess or use defaults.
@@ -171,9 +174,22 @@ One or two lines: what state the project is in right now.
 
 Include the last completed step number in **Next** when work stopped mid-task.
 
-### 8. Technical Decisions
+### 8. System Docs & How-To (keep them true)
 
-For significant architectural decisions, add notes to `.agents/topics/[topic].md`.
+The journal records *what was done*. These two files record *how the system works* and *how to operate it* — keep them current, because the next agent trusts them:
+
+- **`.agents/system.md`** — architecture, interfaces & protocols, hardware & environment, critical config, secrets locations.
+  Update it **in the same task** whenever you add or change a component, an endpoint or message format, a pin or board, a required library, or a config value that must match in more than one place.
+- **`.agents/pipeline.md`** — prerequisites, first-time setup, build/test/run/deploy commands, how to use the running system, how to verify it works, troubleshooting.
+  Update it whenever a command, setup step, or usage flow changes. A command you had to discover by trial and error belongs here.
+
+If either file is still an empty template (or is missing sections the current templates have), fill it in from the code and from what you learn during the task — don't leave it for later. Write only what you verified; mark anything uncertain with `(unverified)`.
+
+For significant architectural decisions (the *why*), add notes to `.agents/topics/[topic].md`.
+
+**Secrets:** `.agents/` is shared through git (only `.agents/private/` and `.agents/backup/` are ignored). Never write a password, token, API key, or private key value in any file under `.agents/` — record only the secret's name and where it is stored. Personal notes that must not be shared go in `.agents/private/`.
+
+**README:** `README.md` is for humans. When the user asks for one, build it from `system.md` (what it is) and `pipeline.md` (how to install, run, use) instead of inventing content.
 
 ### 9. Handoff Protocol (when token limit is near or switching AI)
 
@@ -203,12 +219,14 @@ CLAUDE.md               # Contains `@AGENTS.md` so Claude Code loads the same ru
 ├── Agent-Journal.html  # ✨ Auto-generated HTML companion — open in browser
 ├── fail_log.md         # ⚠️ Known pitfalls, failed approaches & "Do Not Repeat" rules
 ├── active.md           # Current status, deliverables, 3-line handoff (read FIRST)
-├── pipeline.md         # Build, test, lint, and deploy commands for this project
-├── PROJECT_MAP.md      # Auto-generated codebase map
+├── system.md           # How the system works: architecture, protocols, hardware, critical config, secrets locations
+├── pipeline.md         # How to operate it: setup, build, test, run, deploy, usage, troubleshooting
+├── PROJECT_MAP.md      # Auto-generated codebase map (file tree + top-level symbols)
 ├── graph.json          # Machine-readable project graph
 ├── sessions/           # Detailed session checkpoints
 ├── topics/             # Architectural decision records
 ├── index/              # Filesystem snapshots
+├── backup/             # Git-ignored copies of files the installer replaced
 └── private/            # Git-ignored local notes
 ```
 

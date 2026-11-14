@@ -20,7 +20,9 @@ Most AI agents focus on machine-readable context. **Agent Journal** focuses on *
 |---------|-------------|
 | 🧠 **Decision Memory** | Captures *why* decisions were made, not just *what* changed |
 | ⚠️ **Failure Memory (`fail_log.md`)** | Records dead-ends, root causes, and "Do Not Repeat" rules so AI never loops on past mistakes |
-| 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map so AI doesn't get lost |
+| 🗺️ **Memory Layer** | `agent-map.py` builds a codebase map (files + the functions/classes each one defines) so AI doesn't get lost |
+| 📐 **System Docs (`system.md`)** | One file for how the system works: architecture, protocols/APIs, hardware, critical config, where secrets live |
+| 🧭 **How-To (`pipeline.md`)** | Prerequisites, first-time setup, build/test/run/deploy commands, usage, verification, troubleshooting |
 | 🛡️ **Pre-Journaling** | AI logs its plan *before* coding to prevent lost context if tokens run out |
 | 🔨 **Step-by-Step Logging** | Logs every action *before* executing — never lose progress when tokens run out |
 | 🔄 **Handoff Protocol** | Seamless AI-to-AI handoff with resume points when switching agents |
@@ -81,8 +83,23 @@ The **Agent Map** is a "knowledge graph" that gives your AI an instant understan
    ```bash
    python agent-map.py
    ```
-3. It creates `.agents/PROJECT_MAP.md` and `graph.json`.
+3. It creates `.agents/PROJECT_MAP.md` and `graph.json` — the file tree, plus the top-level functions, classes, and headings each file defines.
 4. Your AI is instructed by the Agent Journal to **always read the map first**. This reduces hallucinations and drops token usage significantly.
+
+---
+
+## 📐 System Docs & How-To (`system.md` + `pipeline.md`)
+
+The journal is the AI's work diary: what was done, and why. It does **not** explain how your system works. Two more files in `.agents/` cover that, and the AI is instructed to keep them current in the same task as the change:
+
+| File | Answers | Sections |
+|------|---------|----------|
+| `system.md` | How does it work? | Overview, Architecture, Interfaces & Protocols, Hardware & Environment, Critical Config, Secrets, Known Limits |
+| `pipeline.md` | How do I operate it? | Prerequisites, First-Time Setup, Install, Build, Test, Lint, Run, Deploy, Usage, Verify It Works, Troubleshooting, CI/CD |
+
+Both are installed as empty templates and are never overwritten. Fill them in yourself, or tell your AI: *"Fill in `.agents/system.md` and `.agents/pipeline.md` from the code."*
+
+**Sharing through git:** the installer ignores only `.agents/private/` and `.agents/backup/`, so the journal, fail log, and system docs travel with the repo. For that reason the AI is told never to write a secret value under `.agents/` — only the secret's name and where it is stored. If you prefer to keep everything local, add `.agents/` to your `.gitignore` yourself; the installer leaves an existing `.agents/` rule alone.
 
 ---
 
@@ -230,13 +247,14 @@ Cline gets first-class support:
 
 ### Manual Installation
 
-Just download `Agent-Journal.md` and `fail_log.md` and place them in your project's `.agents/` directory:
+Just download `Agent-Journal.md` and `fail_log.md` (and optionally `system.md`) and place them in your project's `.agents/` directory:
 
 ```
 your-project/
 ├── .agents/
 │   ├── Agent-Journal.md    ← The work diary
-│   └── fail_log.md         ← Known pitfalls & anti-patterns
+│   ├── fail_log.md         ← Known pitfalls & anti-patterns
+│   └── system.md           ← How the system works (optional)
 ├── src/
 └── ...
 ```

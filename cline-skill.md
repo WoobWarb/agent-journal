@@ -11,7 +11,9 @@ The human-readable diary of AI agent work on this project. The source of truth i
 
 ### 0. Context First
 - If `.agents/PROJECT_MAP.md` exists, read it before searching or reading files.
-- If `.agents/pipeline.md` exists, read it before running any build/test/lint/deploy command.
+- If `.agents/system.md` exists, read it before changing anything that crosses a component boundary (architecture, protocols, hardware, critical config). Update it in the same task when one of those facts changes.
+- If `.agents/pipeline.md` exists, read it before running any build/test/lint/deploy command. Update it when a command, setup step, or usage flow changes.
+- Never write a secret value (password, token, key) in any file under `.agents/` — only its name and where it is stored.
 - If `.agents/fail_log.md` exists, read it BEFORE planning or coding so you never repeat a previously failed approach.
 - If `.agents/AGENTS.md` exists, follow it — it contains the full journaling protocol.
 
